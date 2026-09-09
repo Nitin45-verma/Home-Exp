@@ -7,10 +7,7 @@ import en from '../locales/en.json';
 import hi from '../locales/hi.json';
 
 // --- API Configuration ---
-export const API_BASE_URL = 
-  Platform.OS === 'web' && typeof window !== 'undefined' && window.location.hostname !== 'localhost'
-    ? ''
-    : 'http://51.20.116.238:4000';
+export const API_BASE_URL = Platform.OS === 'web' ? '' : 'http://51.20.116.238:4000';
 export const api = axios.create({ baseURL: API_BASE_URL, timeout: 15000, headers: { 'Content-Type': 'application/json' } });
 
 // --- Theme Definition ---
