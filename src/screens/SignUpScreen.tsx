@@ -187,7 +187,7 @@ export default function SignUpScreen({ setAuthScreen, navigation }: SignUpScreen
                   {isSendingOtp ? (
                     <ActivityIndicator size="small" color={C.primary} />
                   ) : (
-                    <Text style={s.sendOtpInlineText}>
+                    <Text style={s.sendOtpInlineText} numberOfLines={1} adjustsFontSizeToFit>
                       {otpSent ? (timer > 0 ? `${timer}s` : t('resend_otp')) : t('send_otp')}
                     </Text>
                   )}
@@ -314,7 +314,7 @@ const getStyles = (C: Theme) => {
     inputError: { borderColor: C.error },
     prefix: { fontSize: 15, fontWeight: '700', color: C.primary, marginRight: 10 },
     input: { flex: 1, fontSize: 15, color: C.primary, paddingVertical: 12 },
-    sendOtpInlineBtn: { backgroundColor: C.secondaryContainer, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10 },
+    sendOtpInlineBtn: { backgroundColor: C.secondaryContainer, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10, flexShrink: 1, marginLeft: 8 },
     sendOtpInlineText: { fontSize: 12, fontWeight: '700', color: C.onSecondaryContainer },
     otpCardBox: { backgroundColor: C.surfaceContainerLow, borderRadius: 16, padding: 12, marginBottom: 14, borderWidth: 1, borderColor: C.outlineVariant + '44' },
     verifyOtpBtn: { backgroundColor: C.secondary, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 10 },
