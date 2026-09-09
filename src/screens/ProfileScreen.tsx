@@ -220,7 +220,7 @@ const getStyles = (C: Theme) => {
   const isDark = C.surface !== '#fbf9fa';
   const glass = Platform.select({
     web: { boxShadow: `0 8px 32px ${C.glassShadow}`, backdropFilter: 'blur(20px)' },
-    ios: { shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 14 },
+    ios: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', },
     android: { elevation: 2 }
   });
 
@@ -248,7 +248,7 @@ const getStyles = (C: Theme) => {
     langBtnText: { fontSize: 13, fontWeight: '600', color: C.onSurfaceVariant },
     langBtnTextActive: { color: C.onSecondaryContainer, fontWeight: '700' },
     rowFields: { flexDirection: 'row', gap: 10 },
-    saveBtn: { backgroundColor: C.primary, borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 8, elevation: 4 },
+    saveBtn: { backgroundColor: C.primary, borderRadius: 14, paddingVertical: 14, alignItems: 'center', boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 4 },
     saveText: { fontSize: 15, fontWeight: '700', color: isDark ? '#000' : '#fff' },
     saveSub: { fontSize: 10, color: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)', marginTop: 2 },
     logoutBtn: { backgroundColor: 'transparent', borderRadius: 14, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, borderColor: C.error + '44' },
@@ -261,7 +261,7 @@ const getStyles = (C: Theme) => {
     switchSub: { fontSize: 11, color: C.outline, marginTop: 2 },
     switchTrack: { width: 46, height: 26, borderRadius: 13, backgroundColor: C.outlineVariant + '77', padding: 2, justifyContent: 'center' },
     switchTrackActive: { backgroundColor: C.secondary },
-    switchThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 2, transform: [{ translateX: 0 }] },
+    switchThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#fff', boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 2, transform: [{ translateX: 0 }] },
     switchThumbActive: { transform: [{ translateX: 20 }] },
   });
 };

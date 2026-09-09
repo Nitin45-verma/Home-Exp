@@ -727,7 +727,7 @@ export default function ExpensesScreen() {
 const getStyles = (C: Theme) => {
   const glass = Platform.select({
     web: { boxShadow: `0 8px 32px ${C.glassShadow}`, backdropFilter: 'blur(20px)' },
-    ios: { shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 14 },
+    ios: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', },
     android: { elevation: 2 }
   });
   const isDark = C.surface !== '#fbf9fa';
@@ -738,8 +738,8 @@ const getStyles = (C: Theme) => {
     titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
     pageTitle: { fontSize: 22, fontWeight: '700', color: C.primary },
     pageSub: { fontSize: 12, color: C.outline, marginTop: 3 },
-    micBtnFloating: { width: 46, height: 46, borderRadius: 23, backgroundColor: C.secondary, alignItems: 'center', justifyContent: 'center', shadowColor: C.secondary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4 },
-    scanBtnHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.primary, paddingHorizontal: 12, height: 46, borderRadius: 23, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 6, elevation: 4 },
+    micBtnFloating: { width: 46, height: 46, borderRadius: 23, backgroundColor: C.secondary, alignItems: 'center', justifyContent: 'center', boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 4 },
+    scanBtnHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.primary, paddingHorizontal: 12, height: 46, borderRadius: 23, boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 4 },
     scanBtnTextHeader: { color: isDark ? '#000' : '#fff', fontSize: 13, fontWeight: '700' },
     scannerOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
     scannerLoadingCard: { borderRadius: 20, padding: 30, alignItems: 'center', gap: 16, borderWidth: 1, borderColor: C.borderColor, width: '80%', maxWidth: 320, ...glass },
@@ -784,7 +784,7 @@ const getStyles = (C: Theme) => {
     gridCheck: { position: 'absolute', top: 4, right: 4 },
     preview: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surfaceContainer, borderRadius: 12, padding: 12, marginBottom: 10 },
     previewText: { fontSize: 12, fontWeight: '600', color: C.onSurface, flex: 1 },
-    submitBtn: { backgroundColor: C.primary, borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 4, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 8, elevation: 4 },
+    submitBtn: { backgroundColor: C.primary, borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 4, boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 4 },
     submitText: { fontSize: 15, fontWeight: '700', color: isDark ? '#000' : '#fff' },
     submitSub: { fontSize: 10, color: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)', marginTop: 2 },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 16 },

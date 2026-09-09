@@ -208,7 +208,7 @@ const getStyles = (C: Theme) => {
   const isDark = C.surface !== '#fbf9fa';
   const glass = Platform.select({
     web: { boxShadow: `0 8px 32px ${C.glassShadow}`, backdropFilter: 'blur(20px)' },
-    ios: { shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 14 },
+    ios: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', },
     android: { elevation: 2 }
   });
 
@@ -227,17 +227,17 @@ const getStyles = (C: Theme) => {
     gameSub: { fontSize: 13, color: C.outline, textAlign: 'center', paddingHorizontal: 20 },
     wheelContainer: { position: 'relative', width: 280, height: 280, alignItems: 'center', justifyContent: 'center', marginVertical: 20 },
     pointerContainer: { position: 'absolute', top: -30, zIndex: 5, alignItems: 'center' },
-    pointerIcon: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 6, elevation: 4 },
-    wheel: { width: 260, height: 260, borderRadius: 130, borderWidth: 6, borderColor: C.borderColor, backgroundColor: C.surfaceContainer, overflow: 'hidden', position: 'relative', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16, elevation: 6 },
+    pointerIcon: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 4 },
+    wheel: { width: 260, height: 260, borderRadius: 130, borderWidth: 6, borderColor: C.borderColor, backgroundColor: C.surfaceContainer, overflow: 'hidden', position: 'relative', boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 6 },
     sector: { position: 'absolute', width: 260, height: 260, alignItems: 'center', justifyContent: 'flex-start' },
     sectorInner: { alignItems: 'center', paddingTop: 20 },
     sectorText: { fontSize: 16, fontWeight: '800' },
     sectorDot: { width: 6, height: 6, borderRadius: 3, marginTop: 6 },
-    centerCap: { position: 'absolute', top: 110, left: 110, width: 40, height: 40, borderRadius: 20, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 },
+    centerCap: { position: 'absolute', top: 110, left: 110, width: 40, height: 40, borderRadius: 20, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 3 },
     centerCapInner: { width: 18, height: 18, borderRadius: 9, backgroundColor: C.secondary },
     errorBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: isDark ? 'rgba(248,113,113,0.1)' : 'rgba(186,26,26,0.06)', borderRadius: 12, padding: 12, paddingHorizontal: 16, maxWidth: '90%', marginVertical: 8 },
     errorText: { fontSize: 13, color: C.error, fontWeight: '600', flex: 1, textAlign: 'center' },
-    spinBtn: { backgroundColor: C.primary, width: '100%', borderRadius: 16, paddingVertical: 14, alignItems: 'center', shadowColor: C.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.18, shadowRadius: 10, elevation: 4 },
+    spinBtn: { backgroundColor: C.primary, width: '100%', borderRadius: 16, paddingVertical: 14, alignItems: 'center', boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 4 },
     spinBtnDisabled: { opacity: 0.6 },
     spinBtnText: { fontSize: 16, fontWeight: '800', color: isDark ? '#000' : '#fff', letterSpacing: 0.5 },
     spinBtnSub: { fontSize: 10, color: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)', marginTop: 2 },
@@ -245,7 +245,7 @@ const getStyles = (C: Theme) => {
     modalContent: { width: '100%', maxWidth: 320, padding: 24, borderRadius: 24, alignItems: 'center', textAlign: 'center', ...glass },
     modalTitle: { fontSize: 20, fontWeight: '800', color: C.primary, marginVertical: 6 },
     modalSubtitle: { fontSize: 14, color: C.outline, textAlign: 'center', marginBottom: 20, paddingHorizontal: 10 },
-    collectBtn: { backgroundColor: C.secondary, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 32, alignItems: 'center', shadowColor: C.secondary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 6, elevation: 3 },
+    collectBtn: { backgroundColor: C.secondary, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 32, alignItems: 'center', boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 3 },
     collectBtnText: { fontSize: 14, fontWeight: '700', color: C.onSecondaryContainer }
   });
 };

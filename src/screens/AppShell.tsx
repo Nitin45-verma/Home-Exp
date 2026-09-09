@@ -98,7 +98,7 @@ const getStyles = (C: Theme) => {
       paddingBottom: Platform.OS === 'ios' ? 24 : 8,
       ...Platform.select({
         web: { boxShadow: `0 -4px 24px ${C.glassShadow}`, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' },
-        ios: { shadowColor: C.secondary, shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.05, shadowRadius: 16 },
+        ios: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', },
         android: { elevation: 10 },
       }),
     },
@@ -136,7 +136,7 @@ const getStyles = (C: Theme) => {
       zIndex: 100,
       ...Platform.select({
         web: { boxShadow: isDark ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(65,102,86,0.35)' },
-        ios: { shadowColor: C.secondary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 10 },
+        ios: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', },
         android: { elevation: 6 },
       }),
     },

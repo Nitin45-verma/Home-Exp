@@ -248,7 +248,7 @@ export default function OnboardingScreen() {
 const getStyles = (C: Theme) => {
   const glass = Platform.select({
     web: { boxShadow: `0 8px 32px ${C.glassShadow}`, backdropFilter: 'blur(20px)' },
-    ios: { shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 16 },
+    ios: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', },
     android: { elevation: 3 }
   });
   const isDark = C.surface !== '#fbf9fa';
@@ -299,7 +299,7 @@ const getStyles = (C: Theme) => {
     btnRow: { flexDirection: 'row', gap: 10, marginTop: 20 },
     backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 13, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, borderColor: C.outlineVariant + '66' },
     backText: { fontSize: 14, fontWeight: '600', color: C.onSurfaceVariant },
-    nextBtn: { flex: 2, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 14, alignItems: 'center', shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 8, elevation: 4 },
+    nextBtn: { flex: 2, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 14, alignItems: 'center', boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 4 },
     nextText: { fontSize: 14, fontWeight: '700', color: isDark ? '#000' : '#fff' },
     nextSub: { fontSize: 10, color: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)', marginTop: 2 },
   });

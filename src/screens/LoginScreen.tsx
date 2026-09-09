@@ -286,7 +286,7 @@ export default function LoginScreen({ setAuthScreen, navigation }: LoginScreenPr
 const getStyles = (C: Theme) => {
   const glass = Platform.select({
     web: { boxShadow: `0 8px 32px ${C.glassShadow}`, backdropFilter: 'blur(20px)' },
-    ios: { shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 16 },
+    ios: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', },
     android: { elevation: 3 }
   });
   const isDark = C.surface !== '#fbf9fa';
@@ -297,7 +297,7 @@ const getStyles = (C: Theme) => {
     glow2: { position: 'absolute', bottom: -80, left: -80, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(237,227,184,0.22)', zIndex: 0 },
     scroll: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 24, gap: 0 },
     logoWrap: { alignItems: 'center', marginBottom: 28 },
-    logoBox: { width: 56, height: 56, borderRadius: 16, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 10, shadowColor: C.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.18, shadowRadius: 12, elevation: 5 },
+    logoBox: { width: 56, height: 56, borderRadius: 16, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 10, boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 5 },
     logoText: { fontSize: 26, fontWeight: '700', color: C.primary, letterSpacing: -0.5 },
     logoSub: { fontSize: 12, color: C.outline, marginTop: 3 },
     card: { backgroundColor: C.cardBg, borderRadius: 24, borderWidth: 1, borderColor: C.borderColor, padding: 20, gap: 0, ...glass },
@@ -322,7 +322,7 @@ const getStyles = (C: Theme) => {
     eyeBtn: { padding: 6 },
     err: { fontSize: 11, color: C.error, marginTop: 5, marginLeft: 2 },
     forgot: { fontSize: 11, fontWeight: '600', color: C.secondary },
-    primaryBtn: { backgroundColor: C.primary, borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 6, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 8, elevation: 4 },
+    primaryBtn: { backgroundColor: C.primary, borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 6, boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 4 },
     primaryBtnText: { fontSize: 15, fontWeight: '700', color: isDark ? '#000' : '#fff' },
     primaryBtnSub: { fontSize: 10, color: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)', marginTop: 2 },
     divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10 },

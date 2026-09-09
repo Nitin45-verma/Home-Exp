@@ -7,8 +7,8 @@ import en from '../locales/en.json';
 import hi from '../locales/hi.json';
 
 // --- API Configuration ---
-const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://localhost:4000';
-axios.defaults.baseURL = BASE_URL;
+const BASE_URL = 'http://51.20.116.238:4000';
+export const api = axios.create({ baseURL: BASE_URL, timeout: 15000, headers: { 'Content-Type': 'application/json' } });
 
 // --- Theme Definition ---
 export interface Theme {
@@ -215,7 +215,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // --- Data Fetching Actions ---
   const fetchMonthlyData = useCallback(async () => {
     try {
-      const res = await axios.get('/api/expenses/monthly');
+      const res = await api.get('/api/expenses/monthly');
       if (res.data.success) {
         setExpenses(res.data.expenses);
         if (user) {
@@ -229,7 +229,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchGullakBalance = useCallback(async () => {
     try {
-      const res = await axios.get('/api/savings/gullak');
+      const res = await api.get('/api/savings/gullak');
       if (res.data.success) {
         setSavingsGullakBalance(res.data.savingsGullakBalance);
       }
@@ -240,7 +240,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchReminders = useCallback(async () => {
     try {
-      const res = await axios.get('/api/reminders');
+      const res = await api.get('/api/reminders');
       if (res.data.success) {
         setReminders(res.data.reminders);
       }
@@ -268,21 +268,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const initializeSession = async () => {
       const token = storage.get('hb_token');
       if (token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         try {
-          const res = await axios.get('/api/user/profile');
+          const res = await api.get('/api/user/profile');
           if (res.data.success) {
             setUser(res.data.user);
             setIsLoggedIn(true);
             setIsFirstTimeUser(res.data.user.isFirstTimeUser);
             
-            const monthlyRes = await axios.get('/api/expenses/monthly');
+            const monthlyRes = await api.get('/api/expenses/monthly');
             setExpenses(monthlyRes.data.expenses);
             
-            const remindersRes = await axios.get('/api/reminders');
+            const remindersRes = await api.get('/api/reminders');
             setReminders(remindersRes.data.reminders);
             
-            const gullakRes = await axios.get('/api/savings/gullak');
+            const gullakRes = await api.get('/api/savings/gullak');
             setSavingsGullakBalance(gullakRes.data.savingsGullakBalance);
           } else {
             throw new Error('Invalid response');
@@ -290,7 +290,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         } catch (e) {
           console.log('Session restore failed, logging out:', e);
           storage.remove('hb_token');
-          delete axios.defaults.headers.common['Authorization'];
+          delete api.defaults.headers.common['Authorization'];
         }
       }
       setLoading(false);
@@ -308,12 +308,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         ? { email: phoneNumber, password } 
         : { phone: phoneNumber, password };
 
-      const res = await axios.post('/api/auth/login', payload);
+      const res = await api.post('/api/auth/login', payload);
       
       if (res.data.success) {
         const { token, user: loggedUser, isFirstTimeUser: onboardFlag } = res.data;
         storage.set('hb_token', token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         
         setUser(loggedUser);
         setIsLoggedIn(true);
@@ -346,12 +346,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         ? { email: phoneNumber, password } 
         : { phone: phoneNumber, password };
 
-      const res = await axios.post('/api/auth/register', payload);
+      const res = await api.post('/api/auth/register', payload);
       
       if (res.data.success) {
         const { token, user: loggedUser, isFirstTimeUser: onboardFlag } = res.data;
         storage.set('hb_token', token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         
         setUser(loggedUser);
         setIsLoggedIn(true);
@@ -370,14 +370,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       return false;
     } catch (error) {
       setLoading(false);
-      handleNetworkError(error, 'connection_error');
-      return false;
+      throw error;
     }
-  }, [fetchMonthlyData, fetchGullakBalance, fetchReminders, handleNetworkError]);
+  }, [fetchMonthlyData, fetchGullakBalance, fetchReminders]);
 
   const sendEmailOtp = useCallback(async (email: string): Promise<{ success: boolean; message: string }> => {
     try {
-      const res = await axios.post('/api/auth/send-otp', { email });
+      const res = await api.post('/api/auth/send-otp', { email });
       if (res.data.success) {
         return { success: true, message: res.data.message || 'OTP sent successfully' };
       }
@@ -391,12 +390,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const verifyEmailOtp = useCallback(async (email: string, otp: string): Promise<{ success: boolean; message: string }> => {
     try {
       setLoading(true);
-      const res = await axios.post('/api/auth/verify-otp', { email, otp });
+      const res = await api.post('/api/auth/verify-otp', { email, otp });
       if (res.data.success) {
         const { token, user: loggedUser, isFirstTimeUser: onboardFlag } = res.data;
         if (token) {
           storage.set('hb_token', token);
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           setUser(loggedUser);
           setIsLoggedIn(true);
           setIsFirstTimeUser(onboardFlag);
@@ -422,7 +421,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(() => {
     storage.remove('hb_token');
-    delete axios.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common['Authorization'];
     setUser(null);
     setIsLoggedIn(false);
     setIsFirstTimeUser(true);
@@ -435,7 +434,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const completeOnboarding = useCallback(async (data: { name: string; budgetLimit: string; language: string; currency?: string }) => {
     try {
       setLoading(true);
-      const res = await axios.put('/api/user/complete-onboarding', {
+      const res = await api.put('/api/user/complete-onboarding', {
         name: data.name,
         monthlyBudget: parseInt(data.budgetLimit, 10) || 0,
         preferredLanguage: data.language
@@ -462,7 +461,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     savingsAchieved?: string; 
   }) => {
     try {
-      const res = await axios.put('/api/user/profile', {
+      const res = await api.put('/api/user/profile', {
         name: data.name,
         monthlyBudget: parseInt(data.budgetLimit, 10) || 0,
         preferredLanguage: data.language,
@@ -483,7 +482,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // --- Expense Action (Automatically syncs monthly aggregates and Gullak balance) ---
   const addExpense = useCallback(async (title: string, amount: string, category: string, type: 'debit' | 'credit' = 'debit') => {
     try {
-      const res = await axios.post('/api/expenses', {
+      const res = await api.post('/api/expenses', {
         itemName: title,
         amount: parseFloat(amount),
         category,
@@ -507,7 +506,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const bulkSaveExpenses = useCallback(async (expensesList: Array<{ amount: number; itemName: string; category: string; date?: string; type?: 'debit' | 'credit' }>): Promise<boolean> => {
     try {
-      const res = await axios.post('/api/expenses/bulk-save', { expenses: expensesList });
+      const res = await api.post('/api/expenses/bulk-save', { expenses: expensesList });
       if (res.data.success) {
         if (res.data.rewardPoints !== undefined) {
           setUser(prev => prev ? { ...prev, rewardPoints: res.data.rewardPoints } : null);
@@ -527,7 +526,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const spinWheel = useCallback(async (): Promise<{ wonPoints: number; rewardPoints: number }> => {
     try {
-      const res = await axios.post('/api/user/spin-wheel');
+      const res = await api.post('/api/user/spin-wheel');
       if (res.data.success) {
         setUser(res.data.user);
         return {
@@ -545,7 +544,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // --- Pay Reminder Action (Marks paid and creates expense item, re-fetches dashboard aggregates) ---
   const payReminder = useCallback(async (reminderId: string) => {
     try {
-      const res = await axios.put(`/api/reminders/${reminderId}/pay`);
+      const res = await api.put(`/api/reminders/${reminderId}/pay`);
       if (res.data.success) {
         await refreshAllData();
       }
@@ -557,7 +556,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // --- AI Voice Parse Action ---
   const voiceParseExpense = useCallback(async (text: string): Promise<{ amount: number; category: string; itemName: string } | null> => {
     try {
-      const res = await axios.post('/api/expenses/voice-parse', { text });
+      const res = await api.post('/api/expenses/voice-parse', { text });
       if (res.data.success) {
         return {
           amount: res.data.amount,
