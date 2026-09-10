@@ -47,14 +47,31 @@ export default function LoginScreen({ setAuthScreen, navigation }: LoginScreenPr
 
   useEffect(() => {
     if (Platform.OS === 'web') {
+      // Guard: avoid re-initializing if script already loaded
+      const existingScript = document.querySelector('script[data-gsi]');
+      if (existingScript) {
+        // Script already present — just re-render the button if needed
+        if ((window as any).google) {
+          const btnContainer = document.getElementById('google-btn-container');
+          if (btnContainer && !btnContainer.hasChildNodes()) {
+            (window as any).google.accounts.id.renderButton(
+              btnContainer,
+              { theme: isDark ? 'filled_black' : 'outline', size: 'large', width: 350 }
+            );
+          }
+        }
+        return;
+      }
+
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
+      script.setAttribute('data-gsi', 'true'); // mark so we never inject twice
       script.onload = () => {
         if ((window as any).google) {
           (window as any).google.accounts.id.initialize({
-            client_id: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '102148769352-u496nd04n6d04n6d.apps.googleusercontent.com', // Replace with real Client ID from env
+            client_id: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '',
             callback: async (response: any) => {
               const res = await loginWithGoogle(response.credential);
               if (!res.success) {
@@ -66,13 +83,14 @@ export default function LoginScreen({ setAuthScreen, navigation }: LoginScreenPr
           if (btnContainer) {
             (window as any).google.accounts.id.renderButton(
               btnContainer,
-              { theme: isDark ? 'filled_black' : 'outline', size: 'large', width: '100%' }
+              // width must be a NUMBER (pixels) — Google GSI rejects '100%' string
+              { theme: isDark ? 'filled_black' : 'outline', size: 'large', width: 350 }
             );
           }
         }
       };
       document.head.appendChild(script);
-      
+
       return () => {
         if (document.head.contains(script)) {
           document.head.removeChild(script);
@@ -80,6 +98,7 @@ export default function LoginScreen({ setAuthScreen, navigation }: LoginScreenPr
       };
     }
   }, [loginWithGoogle, isDark]);
+
 
   const validate = () => {
     const e: typeof errors = {};
@@ -307,7 +326,20 @@ export default function LoginScreen({ setAuthScreen, navigation }: LoginScreenPr
           {/* Quick Login */}
           <View style={s.socialRow}>
             {Platform.OS === 'web' ? (
-              <View nativeID="google-btn-container" style={{ width: '100%', alignItems: 'center' }} />
+              // Outer View handles full-width centering in React Native layout.
+              // Inner div uses a fixed pixel width (350px) because Google GSI's
+              // renderButton() rejects percentage strings like '100%'.
+              <View style={{ width: '100%', alignItems: 'center' }}>
+                <div
+                  id="google-btn-container"
+                  style={{
+                    width: 350,
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    borderRadius: 8,
+                  }}
+                />
+              </View>
             ) : (
               <TouchableOpacity style={s.socialBtn} onPress={() => {}} disabled={isLoading}>
                 <MaterialCommunityIcons name="google" size={22} color={C.primary} />
