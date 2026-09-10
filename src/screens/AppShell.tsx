@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform, Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppContext, Theme } from '../context/AppContext';
 import DashboardScreen from './DashboardScreen';
@@ -9,27 +9,30 @@ import ProfileScreen from './ProfileScreen';
 import SpinWheelScreen from './SpinWheelScreen';
 
 const TABS = [
-  { id: 'dashboard', label: 'Dashboard', hi: 'डैशबोर्ड', icon: 'view-grid-outline', iconActive: 'view-grid' },
-  { id: 'expenses', label: 'Expenses', hi: 'खर्च', icon: 'wallet-outline', iconActive: 'wallet' },
-  { id: 'analytics', label: 'Analytics', hi: 'विश्लेषण', icon: 'chart-line', iconActive: 'chart-line' },
-  { id: 'profile', label: 'Profile', hi: 'प्रोफ़ाइल', icon: 'account-outline', iconActive: 'account' },
+  { id: 'dashboard', label: 'Home',     icon: 'view-grid-outline',  iconActive: 'view-grid' },
+  { id: 'expenses',  label: 'Expenses', icon: 'wallet-outline',      iconActive: 'wallet' },
+  { id: 'analytics', label: 'Insights', icon: 'chart-line',          iconActive: 'chart-line' },
+  { id: 'profile',   label: 'Profile',  icon: 'account-circle-outline', iconActive: 'account-circle' },
 ];
+
+// Max content width for web
+const MAX_W = 680;
 
 export default function AppShell() {
   const context = useContext(AppContext);
   if (!context) return null;
 
-  const { C, isDarkMode, t } = context;
+  const { C, isDarkMode } = context;
   const [tab, setTab] = useState('dashboard');
 
   const renderScreen = () => {
     switch (tab) {
       case 'dashboard': return <DashboardScreen setActiveTab={setTab} />;
-      case 'expenses': return <ExpensesScreen />;
+      case 'expenses':  return <ExpensesScreen />;
       case 'analytics': return <AnalyticsScreen />;
-      case 'profile': return <ProfileScreen />;
-      case 'spin': return <SpinWheelScreen onBack={() => setTab('dashboard')} />;
-      default: return <DashboardScreen setActiveTab={setTab} />;
+      case 'profile':   return <ProfileScreen />;
+      case 'spin':      return <SpinWheelScreen onBack={() => setTab('dashboard')} />;
+      default:          return <DashboardScreen setActiveTab={setTab} />;
     }
   };
 
@@ -37,39 +40,47 @@ export default function AppShell() {
 
   return (
     <SafeAreaView style={s.root}>
-      {/* Screen */}
-      <View style={s.screen}>{renderScreen()}</View>
+      {/* Responsive centering shell */}
+      <View style={s.shell}>
+        {/* Screen content */}
+        <View style={s.screen}>{renderScreen()}</View>
 
-      {/* FAB (dashboard only) */}
-      {tab === 'dashboard' && (
-        <TouchableOpacity style={s.fab} onPress={() => setTab('expenses')} activeOpacity={0.8}>
-          <MaterialCommunityIcons name="plus" size={28} color={isDarkMode ? '#000' : '#fff'} />
-          <View style={s.fabRing} />
-        </TouchableOpacity>
-      )}
+        {/* FAB — only on dashboard */}
+        {tab === 'dashboard' && (
+          <TouchableOpacity
+            style={s.fab}
+            onPress={() => setTab('expenses')}
+            activeOpacity={0.85}
+          >
+            <MaterialCommunityIcons name="plus" size={26} color={isDarkMode ? '#000' : '#fff'} />
+            <View style={s.fabRing} />
+          </TouchableOpacity>
+        )}
 
-      {/* Bottom Nav */}
-      <View style={s.nav}>
-        {TABS.map(tItem => {
-          const active = tab === tItem.id;
-          return (
-            <TouchableOpacity
-              key={tItem.id}
-              style={[s.navItem, active ? s.navItemActive : null]}
-              onPress={() => setTab(tItem.id)}
-              activeOpacity={0.7}
-            >
-              <MaterialCommunityIcons
-                name={(active ? tItem.iconActive : tItem.icon) as any}
-                size={22}
-                color={active ? C.onSecondaryContainer : C.outline}
-              />
-              <Text style={[s.navLabel, active ? s.navLabelActive : null]}>
-                {t(tItem.id)}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        {/* Bottom Navigation Bar */}
+        <View style={s.nav}>
+          {TABS.map(tItem => {
+            const active = tab === tItem.id;
+            return (
+              <TouchableOpacity
+                key={tItem.id}
+                style={s.navItem}
+                onPress={() => setTab(tItem.id)}
+                activeOpacity={0.7}
+              >
+                {active && <View style={s.activePill} />}
+                <MaterialCommunityIcons
+                  name={(active ? tItem.iconActive : tItem.icon) as any}
+                  size={24}
+                  color={active ? C.secondary : C.outline}
+                />
+                <Text style={[s.navLabel, active && s.navLabelActive]}>
+                  {tItem.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -77,79 +88,104 @@ export default function AppShell() {
 
 const getStyles = (C: Theme) => {
   const isDark = C.surface !== '#fbf9fa';
+  const NAV_H = Platform.OS === 'ios' ? 80 : 64;
+
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: C.surface },
+    root: {
+      flex: 1,
+      backgroundColor: isDark ? '#050a14' : '#f5f4f8',
+      alignItems: 'center',
+    },
+    shell: {
+      flex: 1,
+      width: '100%',
+      ...(Platform.OS === 'web' ? { maxWidth: MAX_W } : {}),
+      backgroundColor: C.surface,
+      position: 'relative',
+    },
     screen: {
       flex: 1,
-      paddingBottom: Platform.select({ web: 64, ios: 60, android: 58, default: 64 }),
+      paddingBottom: NAV_H,
     },
+
+    // Bottom Nav
     nav: {
       position: 'absolute',
       bottom: 0,
       left: 0,
       right: 0,
+      height: NAV_H,
       flexDirection: 'row',
-      justifyContent: 'space-around',
       alignItems: 'center',
+      justifyContent: 'space-around',
       backgroundColor: C.cardBg,
       borderTopWidth: 1,
       borderTopColor: C.borderColor,
-      paddingVertical: 8,
-      paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+      paddingBottom: Platform.OS === 'ios' ? 20 : 4,
       ...Platform.select({
-        web: { boxShadow: `0 -4px 24px ${C.glassShadow}`, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' },
-        ios: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', },
-        android: { elevation: 10 },
+        web: {
+          boxShadow: `0 -4px 32px ${C.glassShadow}`,
+          backdropFilter: 'blur(24px)',
+        },
+        ios:     { boxShadow: '0px -2px 12px rgba(0,0,0,0.08)' },
+        android: { elevation: 16 },
       }),
     },
     navItem: {
-      flexDirection: 'column',
+      flex: 1,
       alignItems: 'center',
-      paddingVertical: 5,
-      paddingHorizontal: 14,
-      borderRadius: 22,
+      justifyContent: 'center',
+      paddingVertical: 6,
+      position: 'relative',
     },
-    navItemActive: {
-      backgroundColor: C.secondaryContainer,
+    activePill: {
+      position: 'absolute',
+      top: 0,
+      width: 32,
+      height: 3,
+      borderRadius: 2,
+      backgroundColor: C.secondary,
     },
     navLabel: {
-      fontSize: 9,
+      fontSize: 10,
       fontWeight: '600',
       color: C.outline,
-      marginTop: 2,
-      textTransform: 'uppercase',
-      letterSpacing: 0.4,
+      marginTop: 3,
+      letterSpacing: 0.3,
     },
     navLabelActive: {
-      color: C.onSecondaryContainer,
+      color: C.secondary,
+      fontWeight: '700',
     },
+
+    // FAB
     fab: {
       position: 'absolute',
-      bottom: Platform.select({ web: 80, ios: 88, default: 76 }),
+      bottom: NAV_H + 12,
       right: 20,
-      width: 54,
-      height: 54,
-      borderRadius: 27,
+      width: 52,
+      height: 52,
+      borderRadius: 26,
       backgroundColor: C.secondary,
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 100,
       ...Platform.select({
-        web: { boxShadow: isDark ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(65,102,86,0.35)' },
-        ios: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', },
-        android: { elevation: 6 },
+        web:     { boxShadow: isDark ? '0 8px 24px rgba(0,0,0,0.5)' : '0 8px 24px rgba(65,102,86,0.4)' },
+        ios:     { boxShadow: '0px 6px 16px rgba(0,0,0,0.2)' },
+        android: { elevation: 8 },
       }),
     },
     fabRing: {
       position: 'absolute',
-      top: -4,
-      left: -4,
-      right: -4,
-      bottom: -4,
-      borderRadius: 31,
+      top: -5,
+      left: -5,
+      right: -5,
+      bottom: -5,
+      borderRadius: 32,
       borderWidth: 2,
       borderColor: C.secondary,
-      opacity: 0.2,
+      opacity: 0.25,
     },
   });
 };

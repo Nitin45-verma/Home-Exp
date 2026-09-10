@@ -150,173 +150,178 @@ export default function LoginScreen({ setAuthScreen, navigation }: LoginScreenPr
   const handleGoogle = async () => {
     setIsLoading(true);
     await login('9876543210', 'password');
-    setIsLoading(false);
-  };
-
   const s = getStyles(C);
 
   return (
-    <ScrollView style={s.root} contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        {/* Ambient glows */}
-        <View style={s.glow1} pointerEvents="none" />
-        <View style={s.glow2} pointerEvents="none" />
+    <ScrollView
+      style={s.root}
+      contentContainerStyle={s.scrollContent}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, width: '100%' }}>
+        {/* Responsive centering wrapper */}
+        <View style={s.centerWrap}>
+          {/* Ambient glows */}
+          <View style={s.glow1} pointerEvents="none" />
+          <View style={s.glow2} pointerEvents="none" />
 
-        {/* Logo */}
-        <View style={s.logoWrap}>
-          <View style={s.logoBox}>
-            <MaterialCommunityIcons name="wallet" size={28} color="#fff" />
-          </View>
-          <Text style={s.logoText}>HomeBudget</Text>
-          <Text style={s.logoSub}>{t('logo_sub')}</Text>
-        </View>
-
-        {/* Card */}
-        <View style={s.card}>
-          <Text style={s.cardTitle}>{t('login_welcome')}</Text>
-          <Text style={s.cardSub}>{t('login_welcome_sub')}</Text>
-
-          {/* Email/Phone */}
-          <View style={s.field}>
-            <Text style={s.label}>{t('phone_label')}</Text>
-            <View style={[s.inputRow, errors.phone ? s.inputError : null]}>
-              {(!phone.includes('@') && /^\d*$/.test(phone)) ? <Text style={s.prefix}>+91</Text> : null}
-              <TextInput
-                style={s.input}
-                placeholder={t('phone_placeholder')}
-                placeholderTextColor={C.outline + '99'}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={phone}
-                onChangeText={tVal => { setPhone(tVal); setErrors(e => ({ ...e, phone: null })); }}
-              />
-              {isEmail && (
-                <TouchableOpacity
-                  style={[s.sendOtpInlineBtn, isSendingOtp ? { opacity: 0.6 } : null]}
-                  onPress={() => {
-                    setUseOtpLogin(true);
-                    handleSendOtp();
-                  }}
-                  disabled={isSendingOtp}>
-                  {isSendingOtp ? (
-                    <ActivityIndicator size="small" color={C.primary} />
-                  ) : (
-                    <Text style={s.sendOtpInlineText} numberOfLines={1} adjustsFontSizeToFit>
-                      {otpSent ? (timer > 0 ? `${timer}s` : t('resend_otp')) : t('send_otp')}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              )}
+          {/* Logo */}
+          <View style={s.logoWrap}>
+            <View style={s.logoBox}>
+              <MaterialCommunityIcons name="wallet" size={28} color="#fff" />
             </View>
-            {errors.phone ? <Text style={s.err}>{errors.phone}</Text> : null}
+            <Text style={s.logoText}>HomeBudget</Text>
+            <Text style={s.logoSub}>{t('logo_sub')}</Text>
           </View>
 
-          {/* OTP Input Section if useOtpLogin is enabled */}
-          {useOtpLogin && otpSent ? (
-            <View style={s.otpCardBox}>
-              <Text style={s.label}>{t('otp_label')}</Text>
-              <View style={[s.inputRow, errors.otp ? s.inputError : null, { marginTop: 4 }]}>
-                <MaterialCommunityIcons name="shield-key-outline" size={20} color={C.primary} style={{ marginRight: 8 }} />
-                <TextInput
-                  style={[s.input, { letterSpacing: 6, fontWeight: '700' }]}
-                  placeholder="123456"
-                  placeholderTextColor={C.outline + '88'}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  value={otp}
-                  onChangeText={val => {
-                    setOtp(val);
-                    setErrors(e => ({ ...e, otp: null }));
-                  }}
-                />
-                <TouchableOpacity
-                  style={s.verifyOtpBtn}
-                  onPress={handleVerifyOtpLogin}
-                  disabled={isVerifyingOtp}>
-                  {isVerifyingOtp ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={s.verifyOtpBtnText}>{t('verify_otp_btn')}</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-              {errors.otp ? <Text style={s.err}>{errors.otp}</Text> : null}
-            </View>
-          ) : (
-            /* Password Field */
+          {/* Card */}
+          <View style={s.card}>
+            <Text style={s.cardTitle}>{t('login_welcome')}</Text>
+            <Text style={s.cardSub}>{t('login_welcome_sub')}</Text>
+
+            {/* Email/Phone */}
             <View style={s.field}>
-              <View style={s.labelRow}>
-                <Text style={s.label}>{t('pin_label')}</Text>
-                <TouchableOpacity><Text style={s.forgot}>{t('pin_forgot')}</Text></TouchableOpacity>
-              </View>
-              <View style={[s.inputRow, errors.password ? s.inputError : null]}>
+              <Text style={s.label}>{t('phone_label')}</Text>
+              <View style={[s.inputRow, errors.phone ? s.inputError : null]}>
+                {(!phone.includes('@') && /^\d*$/.test(phone)) ? <Text style={s.prefix}>+91</Text> : null}
                 <TextInput
-                  style={[s.input, { flex: 1, letterSpacing: showPassword ? 2 : 6 }]}
-                  placeholder="• • • • • •"
+                  style={s.input}
+                  placeholder={t('phone_placeholder')}
                   placeholderTextColor={C.outline + '99'}
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={tVal => { setPassword(tVal); setErrors(e => ({ ...e, password: null })); }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={phone}
+                  onChangeText={tVal => { setPhone(tVal); setErrors(e => ({ ...e, phone: null })); }}
                 />
-                <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={s.eyeBtn}>
-                  <MaterialCommunityIcons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={C.outline} />
-                </TouchableOpacity>
+                {isEmail && (
+                  <TouchableOpacity
+                    style={[s.sendOtpInlineBtn, isSendingOtp ? { opacity: 0.6 } : null]}
+                    onPress={() => {
+                      setUseOtpLogin(true);
+                      handleSendOtp();
+                    }}
+                    disabled={isSendingOtp}>
+                    {isSendingOtp ? (
+                      <ActivityIndicator size="small" color={C.primary} />
+                    ) : (
+                      <Text style={s.sendOtpInlineText} numberOfLines={1} adjustsFontSizeToFit>
+                        {otpSent ? (timer > 0 ? `${timer}s` : t('resend_otp')) : t('send_otp')}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                )}
               </View>
-              {errors.password ? <Text style={s.err}>{errors.password}</Text> : null}
+              {errors.phone ? <Text style={s.err}>{errors.phone}</Text> : null}
             </View>
-          )}
 
-          {/* Status message */}
-          {otpMsg && (
-            <View style={[s.msgBanner, otpMsg.isError ? s.msgBannerErr : s.msgBannerSuccess]}>
-              <MaterialCommunityIcons
-                name={otpMsg.isError ? "alert-circle-outline" : "check-circle-outline"}
-                size={16}
-                color={otpMsg.isError ? C.error : "#16a34a"}
-              />
-              <Text style={[s.msgText, { color: otpMsg.isError ? C.error : "#16a34a" }]}>
-                {otpMsg.text}
+            {/* OTP Input Section if useOtpLogin is enabled */}
+            {useOtpLogin && otpSent ? (
+              <View style={s.otpCardBox}>
+                <Text style={s.label}>{t('otp_label')}</Text>
+                <View style={[s.inputRow, errors.otp ? s.inputError : null, { marginTop: 4 }]}>
+                  <MaterialCommunityIcons name="shield-key-outline" size={20} color={C.primary} style={{ marginRight: 8 }} />
+                  <TextInput
+                    style={[s.input, { letterSpacing: 6, fontWeight: '700' }]}
+                    placeholder="123456"
+                    placeholderTextColor={C.outline + '88'}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    value={otp}
+                    onChangeText={val => {
+                      setOtp(val);
+                      setErrors(e => ({ ...e, otp: null }));
+                    }}
+                  />
+                  <TouchableOpacity
+                    style={s.verifyOtpBtn}
+                    onPress={handleVerifyOtpLogin}
+                    disabled={isVerifyingOtp}>
+                    {isVerifyingOtp ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text style={s.verifyOtpBtnText}>{t('verify_otp_btn')}</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+                {errors.otp ? <Text style={s.err}>{errors.otp}</Text> : null}
+              </View>
+            ) : (
+              /* Password Field */
+              <View style={s.field}>
+                <View style={s.labelRow}>
+                  <Text style={s.label}>{t('pin_label')}</Text>
+                  <TouchableOpacity><Text style={s.forgot}>{t('pin_forgot')}</Text></TouchableOpacity>
+                </View>
+                <View style={[s.inputRow, errors.password ? s.inputError : null]}>
+                  <TextInput
+                    style={[s.input, { flex: 1, letterSpacing: showPassword ? 2 : 6 }]}
+                    placeholder="• • • • • •"
+                    placeholderTextColor={C.outline + '99'}
+                    secureTextEntry={!showPassword}
+                    value={password}
+                    onChangeText={tVal => { setPassword(tVal); setErrors(e => ({ ...e, password: null })); }}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={s.eyeBtn}>
+                    <MaterialCommunityIcons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={C.outline} />
+                  </TouchableOpacity>
+                </View>
+                {errors.password ? <Text style={s.err}>{errors.password}</Text> : null}
+              </View>
+            )}
+
+            {/* Status message */}
+            {otpMsg && (
+              <View style={[s.msgBanner, otpMsg.isError ? s.msgBannerErr : s.msgBannerSuccess]}>
+                <MaterialCommunityIcons
+                  name={otpMsg.isError ? "alert-circle-outline" : "check-circle-outline"}
+                  size={16}
+                  color={otpMsg.isError ? C.error : "#16a34a"}
+                />
+                <Text style={[s.msgText, { color: otpMsg.isError ? C.error : "#16a34a" }]}>
+                  {otpMsg.text}
+                </Text>
+              </View>
+            )}
+
+            {/* Login Button */}
+            {!useOtpLogin && (
+              <TouchableOpacity style={s.primaryBtn} onPress={handleLogin} disabled={isLoading} activeOpacity={0.85}>
+                {isLoading
+                  ? <ActivityIndicator color={isDark ? '#000' : '#fff'} />
+                  : <><Text style={s.primaryBtnText}>{t('login_btn')}</Text><Text style={s.primaryBtnSub}>{t('login_btn_sub')}</Text></>}
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Divider */}
+          <View style={s.divider}>
+            <View style={s.divLine} />
+            <Text style={s.divText}>{t('or_divider')}</Text>
+            <View style={s.divLine} />
+          </View>
+
+          {/* Quick Login */}
+          <View style={s.socialRow}>
+            {Platform.OS === 'web' ? (
+              <View nativeID="google-btn-container" style={{ width: '100%', alignItems: 'center' }} />
+            ) : (
+              <TouchableOpacity style={s.socialBtn} onPress={() => {}} disabled={isLoading}>
+                <MaterialCommunityIcons name="google" size={22} color={C.primary} />
+                <Text style={s.socialText}>{t('continue_google')}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Footer Link to Switch to Sign Up */}
+          <View style={s.footer}>
+            <TouchableOpacity onPress={() => navigation ? navigation.navigate('SignUp') : setAuthScreen?.('signup')}>
+              <Text style={s.footerText}>
+                {t('new_to_app')}{' '}
+                <Text style={s.footerLink}>{t('create_account')}</Text>
               </Text>
-            </View>
-          )}
-
-          {/* Login Button */}
-          {!useOtpLogin && (
-            <TouchableOpacity style={s.primaryBtn} onPress={handleLogin} disabled={isLoading} activeOpacity={0.85}>
-              {isLoading
-                ? <ActivityIndicator color={isDark ? '#000' : '#fff'} />
-                : <><Text style={s.primaryBtnText}>{t('login_btn')}</Text><Text style={s.primaryBtnSub}>{t('login_btn_sub')}</Text></>}
             </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Divider */}
-        <View style={s.divider}>
-          <View style={s.divLine} />
-          <Text style={s.divText}>{t('or_divider')}</Text>
-          <View style={s.divLine} />
-        </View>
-
-        {/* Quick Login */}
-        <View style={s.socialRow}>
-          {Platform.OS === 'web' ? (
-            <View nativeID="google-btn-container" style={{ width: '100%', alignItems: 'center' }} />
-          ) : (
-            <TouchableOpacity style={s.socialBtn} onPress={() => {}} disabled={isLoading}>
-              <MaterialCommunityIcons name="google" size={22} color={C.primary} />
-              <Text style={s.socialText}>{t('continue_google')}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Footer Link to Switch to Sign Up */}
-        <View style={s.footer}>
-          <TouchableOpacity onPress={() => navigation ? navigation.navigate('SignUp') : setAuthScreen?.('signup')}>
-            <Text style={s.footerText}>
-              {t('new_to_app')}{' '}
-              <Text style={s.footerLink}>{t('create_account')}</Text>
-            </Text>
-          </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </ScrollView>
@@ -333,9 +338,10 @@ const getStyles = (C: Theme) => {
 
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: C.surface },
+    scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 32, alignItems: 'center' },
+    centerWrap: { width: '100%', ...(Platform.OS === 'web' ? { maxWidth: 440 } : {}) },
     glow1: { position: 'absolute', top: -80, right: -80, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(195,236,215,0.22)', zIndex: 0 },
     glow2: { position: 'absolute', bottom: -80, left: -80, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(237,227,184,0.22)', zIndex: 0 },
-    scroll: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 24, gap: 0 },
     logoWrap: { alignItems: 'center', marginBottom: 28 },
     logoBox: { width: 56, height: 56, borderRadius: 16, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 10, boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', elevation: 5 },
     logoText: { fontSize: 26, fontWeight: '700', color: C.primary, letterSpacing: -0.5 },
@@ -346,7 +352,7 @@ const getStyles = (C: Theme) => {
     field: { marginBottom: 16 },
     label: { fontSize: 10, fontWeight: '700', color: C.onSurfaceVariant, letterSpacing: 0.6, marginBottom: 7, textTransform: 'uppercase' },
     labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 },
-    inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surfaceContainer, borderRadius: 14, borderWidth: 1, borderColor: C.outlineVariant + '55', paddingHorizontal: 14, minHeight: 50 },
+    inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surfaceContainer, borderRadius: 14, borderWidth: 1, borderColor: C.outlineVariant + '55', paddingHorizontal: 14, minHeight: 52 },
     inputError: { borderColor: C.error },
     prefix: { fontSize: 15, fontWeight: '700', color: C.primary, marginRight: 10 },
     input: { flex: 1, fontSize: 15, color: C.primary, paddingVertical: 12 },

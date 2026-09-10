@@ -111,19 +111,28 @@ export default function AnalyticsScreen() {
           <Text style={s.pageSub}>{t('analytics_subtitle')}</Text>
         </View>
 
-        {/* Overview cards */}
+        {/* Overview cards — improved */}
         <View style={s.summaryRow}>
-          <View style={[s.summaryCard, { borderLeftColor: C.secondary }]}>
+          <View style={[s.summaryCard, { borderTopColor: C.secondary }]}>
+            <View style={[s.summaryIcon, { backgroundColor: C.secondary + '1a' }]}>
+              <MaterialCommunityIcons name="arrow-up-circle-outline" size={18} color={C.secondary} />
+            </View>
             <Text style={s.summaryLabel}>{t('total_debits')}</Text>
             <Text style={[s.summaryVal, { color: C.secondary }]}>₹{totalDebit.toLocaleString('en-IN')}</Text>
           </View>
-          <View style={[s.summaryCard, { borderLeftColor: C.tertiary }]}>
+          <View style={[s.summaryCard, { borderTopColor: '#6366f1' }]}>
+            <View style={[s.summaryIcon, { backgroundColor: '#6366f118' }]}>
+              <MaterialCommunityIcons name="arrow-down-circle-outline" size={18} color="#6366f1" />
+            </View>
             <Text style={s.summaryLabel}>{t('total_credits')}</Text>
-            <Text style={[s.summaryVal, { color: C.tertiary }]}>₹{totalCredit.toLocaleString('en-IN')}</Text>
+            <Text style={[s.summaryVal, { color: '#6366f1' }]}>₹{totalCredit.toLocaleString('en-IN')}</Text>
           </View>
-          <View style={[s.summaryCard, { borderLeftColor: C.primary }]}>
+          <View style={[s.summaryCard, { borderTopColor: net > 0 ? C.error : C.secondary }]}>
+            <View style={[s.summaryIcon, { backgroundColor: (net > 0 ? C.error : C.secondary) + '18' }]}>
+              <MaterialCommunityIcons name="scale-balance" size={18} color={net > 0 ? C.error : C.secondary} />
+            </View>
             <Text style={s.summaryLabel}>{t('net_spending')}</Text>
-            <Text style={[s.summaryVal, { color: C.primary }]}>₹{net.toLocaleString('en-IN')}</Text>
+            <Text style={[s.summaryVal, { color: net > 0 ? C.error : C.secondary }]}>₹{net.toLocaleString('en-IN')}</Text>
           </View>
         </View>
 
@@ -170,22 +179,24 @@ export default function AnalyticsScreen() {
           <Text style={s.cardSub}>{t('price_tracking_subtitle')}</Text>
 
           <View style={s.searchRow}>
-            <TextInput
-              style={s.searchInput}
-              placeholder={t('price_search_placeholder')}
-              placeholderTextColor={C.outline + '88'}
-              value={searchItem}
-              onChangeText={setSearchItem}
-              autoCapitalize="none"
-            />
+            <View style={s.searchInputWrap}>
+              <MaterialCommunityIcons name="magnify" size={18} color={C.outline} style={{ marginRight: 8 }} />
+              <TextInput
+                style={s.searchInput}
+                placeholder={t('price_search_placeholder')}
+                placeholderTextColor={C.outline + '88'}
+                value={searchItem}
+                onChangeText={setSearchItem}
+                autoCapitalize="none"
+                onSubmitEditing={handleSearchPriceHistory}
+                returnKeyType="search"
+              />
+            </View>
             <TouchableOpacity style={s.searchBtn} onPress={handleSearchPriceHistory} disabled={isSearching}>
               {isSearching ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <>
-                  <MaterialCommunityIcons name="magnify" size={18} color={isDark ? '#000' : '#fff'} />
-                  <Text style={[s.searchBtnText, { color: isDark ? '#000' : '#fff' }]}>{t('btn_search')}</Text>
-                </>
+                <Text style={s.searchBtnText}>{t('btn_search')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -278,14 +289,19 @@ const getStyles = (C: Theme) => {
 
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: C.surface },
-    scroll: { flexGrow: 1, padding: 20, paddingBottom: 24 },
-    pageTitleRow: { marginBottom: 18 },
-    pageTitle: { fontSize: 22, fontWeight: '700', color: C.primary },
+    scroll: { flexGrow: 1, padding: 16, paddingBottom: 24 },
+    pageTitleRow: { marginBottom: 16 },
+    pageTitle: { fontSize: 22, fontWeight: '800', color: C.primary, letterSpacing: -0.5 },
     pageSub: { fontSize: 12, color: C.outline, marginTop: 3 },
-    summaryRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-    summaryCard: { flex: 1, backgroundColor: C.cardBg, borderRadius: 16, borderWidth: 1, borderColor: C.borderColor, borderLeftWidth: 3, padding: 10, gap: 3, ...glass },
-    summaryLabel: { fontSize: 9, fontWeight: '600', color: C.outline, letterSpacing: 0.3 },
-    summaryVal: { fontSize: 13, fontWeight: '700' },
+    summaryRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+    summaryCard: {
+      flex: 1, backgroundColor: C.cardBg,
+      borderRadius: 18, borderWidth: 1, borderColor: C.borderColor,
+      borderTopWidth: 3, padding: 12, gap: 6, ...glass
+    },
+    summaryIcon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+    summaryLabel: { fontSize: 9, fontWeight: '700', color: C.outline, letterSpacing: 0.4, textTransform: 'uppercase' },
+    summaryVal: { fontSize: 14, fontWeight: '800' },
     card: { backgroundColor: C.cardBg, borderRadius: 24, borderWidth: 1, borderColor: C.borderColor, padding: 18, marginBottom: 16, ...glass },
     cardTitle: { fontSize: 16, fontWeight: '700', color: C.primary },
     cardSub: { fontSize: 11, color: C.outline, marginBottom: 16 },
@@ -314,9 +330,19 @@ const getStyles = (C: Theme) => {
     bdBarFill: { height: '100%', borderRadius: 3 },
     emptyBox: { alignItems: 'center', paddingVertical: 20, gap: 8 },
     emptyTxt: { fontSize: 13, color: C.outline },
-    searchRow: { flexDirection: 'row', gap: 10, marginTop: 8, marginBottom: 4 },
-    searchInput: { flex: 1, backgroundColor: C.surfaceContainer, borderRadius: 12, borderWidth: 1, borderColor: C.outlineVariant + '55', paddingHorizontal: 12, fontSize: 14, color: C.primary, minHeight: 44 },
-    searchBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.secondary, borderRadius: 12, paddingHorizontal: 16, minHeight: 44 },
+    searchRow: { flexDirection: 'row', gap: 10, marginTop: 12, marginBottom: 4 },
+    searchInputWrap: {
+      flex: 1, flexDirection: 'row', alignItems: 'center',
+      backgroundColor: C.surfaceContainer,
+      borderRadius: 14, borderWidth: 1, borderColor: C.outlineVariant + '55',
+      paddingHorizontal: 14, minHeight: 52,
+    },
+    searchInput: { flex: 1, fontSize: 14, color: C.primary },
+    searchBtn: {
+      backgroundColor: C.secondary, borderRadius: 14,
+      paddingHorizontal: 18, minHeight: 52,
+      alignItems: 'center', justifyContent: 'center',
+    },
     searchBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
     priceHistTitle: { fontSize: 13, fontWeight: '700', color: C.primary, marginBottom: 12 },
     priceChart: { flexDirection: 'row', height: 130, alignItems: 'flex-end', gap: 10, marginVertical: 12, backgroundColor: C.surfaceContainerLow, borderRadius: 16, padding: 12 },

@@ -86,6 +86,8 @@ export interface User {
   monthlyBudget: number;
   preferredLanguage: string;
   isFirstTimeUser: boolean;
+  avatar?: string;
+  authProvider?: string;
   isEmailVerified?: boolean;
   savingsName?: string;
   savingsTarget?: number;
@@ -133,6 +135,8 @@ export interface AppContextType {
   logout: () => void;
   completeOnboarding: (data: { name: string; budgetLimit: string; language: string; currency?: string }) => Promise<void>;
   updateProfile: (data: { name: string; budgetLimit: string; language: string; savingsName?: string; savingsTarget?: string; savingsAchieved?: string }) => Promise<void>;
+  updateUserProfile: (name: string, avatar?: string) => Promise<{ success: boolean; message?: string }>;
+  changeUserPassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message?: string }>;
   addExpense: (title: string, amount: string, category: string, type?: 'debit' | 'credit') => Promise<void>;
   bulkSaveExpenses: (expensesList: Array<{ amount: number; itemName: string; category: string; date?: string; type?: 'debit' | 'credit' }>) => Promise<boolean>;
   payReminder: (reminderId: string) => Promise<void>;
@@ -560,6 +564,32 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [refreshAllData, handleNetworkError]);
 
+  const updateUserProfile = useCallback(async (name: string, avatar?: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      setLoading(true);
+      const res = await api.put('/api/user/profile', { name, avatar });
+      setUser(res.data.user);
+      await refreshAllData();
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, message: err.response?.data?.message || 'Failed to update profile' };
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshAllData]);
+
+  const changeUserPassword = useCallback(async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      setLoading(true);
+      const res = await api.put('/api/user/change-password', { currentPassword, newPassword });
+      return { success: true, message: res.data.message };
+    } catch (err: any) {
+      return { success: false, message: err.response?.data?.message || 'Failed to change password' };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // --- Expense Action (Automatically syncs monthly aggregates and Gullak balance) ---
   const addExpense = useCallback(async (title: string, amount: string, category: string, type: 'debit' | 'credit' = 'debit') => {
     try {
@@ -672,6 +702,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         logout,
         completeOnboarding,
         updateProfile,
+        updateUserProfile,
+        changeUserPassword,
         addExpense,
         bulkSaveExpenses,
         payReminder,

@@ -7,13 +7,13 @@ import { AppContext, Theme } from '../context/AppContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import CalculatorModal from '../components/CalculatorModal';
 
-const CATEGORY_META: { [key: string]: { icon: string; nameHi: string } } = {
-  Groceries: { icon: 'cart-outline', nameHi: 'किराना' },
-  Utilities: { icon: 'flash-outline', nameHi: 'बिजली-पानी' },
-  Dining: { icon: 'silverware-fork-knife', nameHi: 'बाहर खाना' },
-  Travel: { icon: 'car-outline', nameHi: 'यात्रा' },
-  Rent: { icon: 'home-outline', nameHi: 'किराया' },
-  Others: { icon: 'dots-horizontal-circle-outline', nameHi: 'अन्य' },
+const CATEGORY_META: { [key: string]: { icon: string; color: string } } = {
+  Groceries: { icon: 'cart-outline',                  color: '#10b981' },
+  Utilities: { icon: 'flash-outline',                 color: '#f59e0b' },
+  Dining:    { icon: 'silverware-fork-knife',          color: '#ef4444' },
+  Travel:    { icon: 'car-outline',                    color: '#6366f1' },
+  Rent:      { icon: 'home-outline',                   color: '#3b82f6' },
+  Others:    { icon: 'dots-horizontal-circle-outline', color: '#8b5cf6' },
 };
 
 interface DashboardScreenProps {
@@ -26,77 +26,77 @@ export default function DashboardScreen({ setActiveTab, navigation }: DashboardS
   if (!context) return null;
 
   const { user, expenses, reminders, savingsGullakBalance, payReminder, t, isDarkMode, toggleTheme, C, setPrefilledAmount } = context;
-
   const [showCalc, setShowCalc] = useState(false);
 
-  const name = user?.name || 'User';
+  const name        = user?.name || 'User';
   const budgetLimit = user?.monthlyBudget || 0;
-  const lang = user?.preferredLanguage || 'en';
+  const lang        = user?.preferredLanguage || 'en';
 
-  const savingsName = user?.savingsName || '';
-  const savingsTarget = user?.savingsTarget || 0;
+  const savingsName     = user?.savingsName || '';
+  const savingsTarget   = user?.savingsTarget || 0;
   const savingsAchieved = user?.savingsAchieved || 0;
-  const savingsPct = savingsTarget > 0 ? Math.min(100, Math.round((savingsAchieved / savingsTarget) * 100)) : 0;
+  const savingsPct      = savingsTarget > 0 ? Math.min(100, Math.round((savingsAchieved / savingsTarget) * 100)) : 0;
 
-  // Filter current month expenses
-  const totalSpent = expenses.filter(e => e.type === 'debit').reduce((s, e) => s + e.amount, 0);
+  const totalSpent  = expenses.filter(e => e.type === 'debit').reduce((s, e)  => s + e.amount, 0);
   const totalCredit = expenses.filter(e => e.type === 'credit').reduce((s, e) => s + e.amount, 0);
-  const netSpent = Math.max(0, totalSpent - totalCredit);
-  const remaining = Math.max(0, budgetLimit - netSpent);
-  const pct = Math.min(100, budgetLimit > 0 ? Math.round((netSpent / budgetLimit) * 100) : 0);
-  const dailyLimit = Math.max(0, Math.round(remaining / 30));
+  const netSpent    = Math.max(0, totalSpent - totalCredit);
+  const remaining   = Math.max(0, budgetLimit - netSpent);
+  const pct         = Math.min(100, budgetLimit > 0 ? Math.round((netSpent / budgetLimit) * 100) : 0);
+  const dailyLimit  = Math.max(0, Math.round(remaining / 30));
 
   const catTotals = Object.keys(CATEGORY_META).map(k => ({
     id: k, ...CATEGORY_META[k],
     amount: expenses.filter(e => e.category === k && e.type === 'debit').reduce((s, e) => s + e.amount, 0),
   })).filter(c => c.amount > 0);
 
-  const greeting = t('dash_greeting_en', { name });
-  const greetSub = t('dash_subtitle_en');
-
-  const progressColor = pct >= 90 ? C.error : pct >= 70 ? C.tertiary : C.secondary;
+  const progressColor = pct >= 90 ? C.error : pct >= 70 ? '#f59e0b' : C.secondary;
 
   const formatDate = (dateStr: string) => {
     try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString(lang === 'hi' ? 'hi-IN' : 'en-IN', { day: 'numeric', month: 'short' });
-    } catch {
-      return dateStr;
-    }
+      return new Date(dateStr).toLocaleDateString(lang === 'hi' ? 'hi-IN' : 'en-IN', { day: 'numeric', month: 'short' });
+    } catch { return dateStr; }
   };
 
+  const avatarLetter = name.charAt(0).toUpperCase();
   const s = getStyles(C);
 
   return (
     <ScrollView style={s.root} contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-      {/* ── Header ─────────────────────────────────── */}
+
+      {/* ── Header ── */}
       <View style={s.header}>
-        <View style={s.profileRow}>
-          <Image
-            style={s.avatar}
-            source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCRoX1uo6XD4NZ_VU7C55OhviPRyXD_i6NN-sJh8L5USRpg3L0eW_-RL0NOuFajoOp58TmDnBkGS3eAzRnm3APY4rPIE5thFZFTc6uwT743PElFUEzPBBLVDeddM9uBF_RoEPzT4b7_deoChSmkQp8o2yrO7P3H8jwY22oHTtXnLCuhLeK7ECSO-xI2rN1dOA7ebyO5uG5RcOimn2jMmHrjQez2KWzVmsAsVEWBQ3ZlAyRmGYh_DFLFU5MmWUq2pfJSVJnXSY6rOts' }}
-          />
-          <View style={s.badge} />
-          <View style={{ marginLeft: 12, flex: 1 }}>
-            <Text style={s.greeting}>{greeting}</Text>
-            <Text style={s.greetSub}>{greetSub}</Text>
-          </View>
+        <TouchableOpacity
+          style={s.avatarWrap}
+          onPress={() => setActiveTab?.('profile')}
+          activeOpacity={0.8}
+        >
+          {user?.avatar ? (
+            <Image source={{ uri: user.avatar }} style={s.avatarImg} />
+          ) : (
+            <View style={s.avatarPlaceholder}>
+              <Text style={s.avatarLetter}>{avatarLetter}</Text>
+            </View>
+          )}
+          <View style={s.onlineDot} />
+        </TouchableOpacity>
+
+        <View style={s.greetBlock}>
+          <Text style={s.greeting} numberOfLines={1}>
+            {t('dash_greeting_en', { name })}
+          </Text>
+          <Text style={s.greetSub} numberOfLines={1}>{t('dash_subtitle_en')}</Text>
         </View>
-        <View style={s.headerIcons}>
-          {/* Quick calculator toggler shortcut */}
-          <TouchableOpacity 
-            style={s.iconBtn} 
-            onPress={() => navigation ? navigation.navigate('Calculator') : setShowCalc(true)} 
+
+        <View style={s.headerActions}>
+          <TouchableOpacity
+            style={s.iconBtn}
+            onPress={() => navigation ? navigation.navigate('Calculator') : setShowCalc(true)}
             activeOpacity={0.75}
           >
-            <MaterialCommunityIcons name="calculator" size={20} color={C.primary} />
+            <MaterialCommunityIcons name="calculator-variant-outline" size={20} color={C.onSurfaceVariant} />
           </TouchableOpacity>
-          {/* Quick theme toggler shortcut */}
           <TouchableOpacity style={s.iconBtn} onPress={toggleTheme} activeOpacity={0.75}>
-            <MaterialCommunityIcons name={isDarkMode ? "weather-sunny" : "weather-night"} size={20} color={C.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={s.iconBtn}>
-            <MaterialCommunityIcons name="bell-outline" size={20} color={C.primary} />
+            <MaterialCommunityIcons name={isDarkMode ? 'weather-sunny' : 'weather-night'} size={20} color={C.onSurfaceVariant} />
           </TouchableOpacity>
         </View>
 
@@ -111,221 +111,198 @@ export default function DashboardScreen({ setActiveTab, navigation }: DashboardS
         />
       </View>
 
-      {/* ── Budget Bento Card ───────────────────────── */}
+      {/* ── Budget Hero Card ── */}
       <View style={s.budgetCard}>
-        <View style={s.budgetGlow} />
-        <View style={s.budgetTop}>
+        {/* Decorative glows */}
+        <View style={s.glow1} />
+        <View style={s.glow2} />
+
+        <View style={s.budgetRow}>
           <View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={s.budgetAmount}>₹{budgetLimit.toLocaleString('en-IN')}</Text>
-              <MaterialCommunityIcons name="wallet-outline" size={18} color={C.secondary} />
-            </View>
             <Text style={s.budgetLabel}>{t('total_budget')}</Text>
+            <Text style={s.budgetAmount}>₹{budgetLimit.toLocaleString('en-IN')}</Text>
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={s.spentLabel}>{t('spent_so_far')}</Text>
-            <Text style={s.spentAmount}>
-              ₹{netSpent.toLocaleString('en-IN')}{' '}
-              <Text style={s.spentPct}>/ {pct}%</Text>
-            </Text>
+          <View style={s.spentBadge}>
+            <Text style={s.spentBadgeLabel}>Spent</Text>
+            <Text style={s.spentBadgeValue}>{pct}%</Text>
           </View>
         </View>
 
-        {/* Progress bar */}
+        {/* Progress */}
         <View style={s.progressBg}>
-          <View style={[s.progressFill, { width: `${pct}%`, backgroundColor: progressColor }]} />
+          <View style={[s.progressFill, { width: `${pct}%` as any, backgroundColor: progressColor }]} />
         </View>
 
-        <View style={s.budgetFooter}>
-          <View style={{ flexDirection: 'row', gap: 18 }}>
+        <View style={s.budgetStats}>
+          <View style={s.statPill}>
+            <MaterialCommunityIcons name="arrow-up-circle-outline" size={14} color={C.error} />
             <View>
-              <Text style={s.statLabel}>{t('remaining')}</Text>
-              <Text style={[s.statValue, { color: C.secondary }]}>₹{remaining.toLocaleString('en-IN')}</Text>
-            </View>
-            <View>
-              <Text style={s.statLabel}>{t('daily_limit')}</Text>
-              <Text style={[s.statValue, { color: C.primary }]}>₹{dailyLimit.toLocaleString('en-IN')}</Text>
+              <Text style={s.statPillLabel}>{t('spent_so_far')}</Text>
+              <Text style={[s.statPillValue, { color: C.error }]}>₹{netSpent.toLocaleString('en-IN')}</Text>
             </View>
           </View>
-          <TouchableOpacity style={s.detailsBtn} onPress={() => navigation ? navigation.navigate('Expenses') : setActiveTab?.('expenses')}>
-            <Text style={s.detailsBtnText}>{t('btn_details')}</Text>
-            <MaterialCommunityIcons name="arrow-right" size={14} color="#fff" />
-          </TouchableOpacity>
+          <View style={s.statDivider} />
+          <View style={s.statPill}>
+            <MaterialCommunityIcons name="arrow-down-circle-outline" size={14} color={C.secondary} />
+            <View>
+              <Text style={s.statPillLabel}>{t('remaining')}</Text>
+              <Text style={[s.statPillValue, { color: C.secondary }]}>₹{remaining.toLocaleString('en-IN')}</Text>
+            </View>
+          </View>
+          <View style={s.statDivider} />
+          <View style={s.statPill}>
+            <MaterialCommunityIcons name="calendar-today" size={14} color={C.onSurfaceVariant} />
+            <View>
+              <Text style={s.statPillLabel}>{t('daily_limit')}</Text>
+              <Text style={[s.statPillValue, { color: C.onSurface }]}>₹{dailyLimit.toLocaleString('en-IN')}</Text>
+            </View>
+          </View>
         </View>
+
+        <TouchableOpacity
+          style={s.detailsBtn}
+          onPress={() => navigation ? navigation.navigate('Expenses') : setActiveTab?.('expenses')}
+          activeOpacity={0.85}
+        >
+          <Text style={s.detailsBtnText}>View Transactions</Text>
+          <MaterialCommunityIcons name="arrow-right" size={16} color={isDarkMode ? '#000' : '#fff'} />
+        </TouchableOpacity>
       </View>
 
-      {/* ── Gupt Gullak Component (Piggy Bank) ────────── */}
-      <View style={s.gullakCard}>
-        <View style={s.gullakLeft}>
-          <View style={s.gullakIconBg}>
-            <MaterialCommunityIcons name="piggy-bank" size={26} color={isDarkMode ? '#fbbf24' : '#d97706'} />
+      {/* ── Quick Stats Row ── */}
+      <View style={s.quickRow}>
+        {/* Gupt Gullak */}
+        <View style={[s.quickCard, s.gullakCard]}>
+          <View style={[s.quickIcon, { backgroundColor: 'rgba(245,158,11,0.15)' }]}>
+            <MaterialCommunityIcons name="piggy-bank" size={22} color="#d97706" />
           </View>
-          <View style={{ marginLeft: 12, flex: 1 }}>
-            <Text style={s.gullakTitle}>{t('gullak_title')}</Text>
-            <Text style={s.gullakSub}>{t('gullak_sub')}</Text>
-          </View>
+          <Text style={s.quickLabel}>{t('gullak_title')}</Text>
+          <Text style={[s.quickValue, { color: '#d97706' }]}>₹{savingsGullakBalance.toLocaleString('en-IN')}</Text>
+          <Text style={s.quickSub}>{t('gullak_saved')}</Text>
         </View>
-        <View style={s.gullakRight}>
-          <Text style={s.gullakBalance}>₹{savingsGullakBalance.toLocaleString('en-IN')}</Text>
-          <View style={s.gullakCoinBadge}>
-            <MaterialCommunityIcons name={"cash" as any} size={12} color="#fff" />
-            <Text style={s.gullakBadgeText}>{t('gullak_saved')}</Text>
+
+        {/* Savings Goal */}
+        <TouchableOpacity
+          style={[s.quickCard, s.savingsQuickCard]}
+          onPress={() => setActiveTab?.('profile')}
+          activeOpacity={0.8}
+        >
+          <View style={[s.quickIcon, { backgroundColor: 'rgba(99,102,241,0.12)' }]}>
+            <MaterialCommunityIcons name="target" size={22} color="#6366f1" />
           </View>
-        </View>
+          <Text style={s.quickLabel}>{t('savings_goal')}</Text>
+          {savingsTarget > 0 ? (
+            <>
+              <View style={s.miniBar}>
+                <View style={[s.miniBarFill, { width: `${savingsPct}%` as any }]} />
+              </View>
+              <Text style={[s.quickValue, { color: '#6366f1', fontSize: 13 }]}>{savingsPct}% reached</Text>
+            </>
+          ) : (
+            <Text style={[s.quickValue, { color: '#6366f1', fontSize: 12 }]}>Set a goal →</Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Rewards */}
+        <TouchableOpacity
+          style={[s.quickCard, s.rewardsQuickCard]}
+          onPress={() => setActiveTab?.('spin')}
+          activeOpacity={0.8}
+        >
+          <View style={[s.quickIcon, { backgroundColor: 'rgba(130,179,158,0.15)' }]}>
+            <MaterialCommunityIcons name="star-circle" size={22} color={C.secondary} />
+          </View>
+          <Text style={s.quickLabel}>Rewards</Text>
+          <Text style={[s.quickValue, { color: C.secondary }]}>{user?.rewardPoints || 0} pts</Text>
+          <Text style={s.quickSub}>Spin to win →</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* ── Important Reminders Widget (महत्वपूर्ण रिमाइंडर्स) ── */}
-      <View style={s.section}>
-        <View style={s.sectionHead}>
-          <View>
+      {/* ── Reminders ── */}
+      {reminders.length > 0 && (
+        <View style={s.section}>
+          <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>{t('reminders_title')}</Text>
-            <Text style={s.sectionTitleHi}>{t('reminders_subtitle')}</Text>
+            <Text style={s.sectionBadge}>{reminders.length}</Text>
           </View>
-        </View>
-
-        {reminders.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.remindersScroll}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.remRow}>
             {reminders.map(item => (
-              <View key={item.reminderId} style={s.reminderChip}>
-                <View style={s.reminderHeader}>
-                  <MaterialCommunityIcons name="alert-circle-outline" size={16} color={C.tertiary} />
-                  <Text style={s.reminderTitleText} numberOfLines={1}>{item.title}</Text>
+              <View key={item.reminderId} style={s.reminderCard}>
+                <View style={s.reminderTop}>
+                  <View style={s.reminderIconBg}>
+                    <MaterialCommunityIcons name="bell-ring-outline" size={16} color={C.error} />
+                  </View>
+                  <Text style={s.reminderTitle} numberOfLines={1}>{item.title}</Text>
                 </View>
-                <Text style={s.reminderAmount}>₹{item.amount.toLocaleString('en-IN')}</Text>
-                <Text style={s.reminderDueDate}>{t('due_date_label')}{formatDate(item.dueDate)}</Text>
-                
+                <Text style={s.reminderAmt}>₹{item.amount.toLocaleString('en-IN')}</Text>
+                <Text style={s.reminderDue}>Due: {formatDate(item.dueDate)}</Text>
                 <TouchableOpacity
                   style={s.payBtn}
                   onPress={() => payReminder(item.reminderId)}
                   activeOpacity={0.8}
                 >
-                  <MaterialCommunityIcons name="check" size={14} color="#fff" style={{ marginRight: 2 }} />
+                  <MaterialCommunityIcons name="check-circle-outline" size={13} color="#fff" />
                   <Text style={s.payBtnText}>{t('btn_pay')}</Text>
                 </TouchableOpacity>
               </View>
             ))}
           </ScrollView>
-        ) : (
-          <View style={s.remindersEmptyCard}>
-            <MaterialCommunityIcons name="check-decagram-outline" size={24} color={C.secondary} />
-            <Text style={s.remindersEmptyText}>{t('all_bills_paid')}</Text>
-          </View>
-        )}
-      </View>
-
-      {/* ── Savings Goal ────────────────────────────── */}
-      <View style={s.savingsCard}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <View>
-            <Text style={s.savingsTitle}>{t('savings_goal')}</Text>
-            <Text style={s.savingsTitleHi}>{t('savings_goal_hi')}</Text>
-          </View>
-          <TouchableOpacity onPress={() => navigation ? navigation.navigate('Profile') : setActiveTab?.('profile')} style={s.savingsEditBtn}>
-            <MaterialCommunityIcons name="pencil-outline" size={16} color={C.tertiary} />
-          </TouchableOpacity>
         </View>
+      )}
 
-        {savingsTarget > 0 ? (
-          <View>
-            <View style={{ marginVertical: 10 }}>
-              <View style={s.savingsRow}>
-                <Text style={s.savingsName}>{savingsName || t('unnamed_goal')}</Text>
-                <Text style={s.savingsTarget}>₹{savingsTarget.toLocaleString('en-IN')}</Text>
-              </View>
-              <View style={s.savingsBarBg}>
-                <View style={[s.savingsBarFill, { width: `${savingsPct}%` }]} />
-              </View>
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={s.savingsPct}>{t('reached_pct', { pct: savingsPct })}</Text>
-              <Text style={s.savingsAchieved}>{t('saved_amount', { amount: savingsAchieved.toLocaleString('en-IN') })}</Text>
-            </View>
-          </View>
-        ) : (
-          <TouchableOpacity style={s.savingsPlaceholder} onPress={() => navigation ? navigation.navigate('Profile') : setActiveTab?.('profile')} activeOpacity={0.8}>
-            <MaterialCommunityIcons name="piggy-bank-outline" size={24} color={C.tertiary} style={{ marginRight: 4 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={s.savingsPlaceholderTitle}>{t('no_savings_goal')}</Text>
-              <Text style={s.savingsPlaceholderSub}>{t('no_savings_goal_sub')}</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={18} color={C.tertiary} />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* ── Savings Rewards Game ────────────────────── */}
-      <View style={s.rewardsCard}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ flex: 1, marginRight: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <MaterialCommunityIcons name="star-circle" size={24} color={C.secondary} />
-              <Text style={s.rewardsTitle}>{t('reward_stars_title')}</Text>
-            </View>
-            <Text style={s.rewardsPointsText}>
-              {t('reward_stars_desc', { points: user?.rewardPoints || 0 })}
-            </Text>
-          </View>
-          <TouchableOpacity 
-            style={s.rewardsBtn} 
-            onPress={() => navigation ? navigation.navigate('Spin') : setActiveTab?.('spin')}
-            activeOpacity={0.8}
-          >
-            <Text style={s.rewardsBtnText}>{t('btn_spin_now')}</Text>
-            <MaterialCommunityIcons name="chevron-right" size={16} color={C.onSecondaryContainer} />
-          </TouchableOpacity>
+      {reminders.length === 0 && (
+        <View style={s.allPaidBanner}>
+          <MaterialCommunityIcons name="check-decagram" size={18} color={C.secondary} />
+          <Text style={s.allPaidText}>{t('all_bills_paid')}</Text>
         </View>
-      </View>
+      )}
 
-      {/* ── Categories ──────────────────────────────── */}
-      <View style={s.section}>
-        <View style={s.sectionHead}>
-          <View>
+      {/* ── Categories ── */}
+      {catTotals.length > 0 && (
+        <View style={s.section}>
+          <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>{t('categories_title')}</Text>
-            <Text style={s.sectionTitleHi}>{t('categories_subtitle')}</Text>
+            <TouchableOpacity
+              style={s.viewAllBtn}
+              onPress={() => setActiveTab?.('expenses')}
+              activeOpacity={0.75}
+            >
+              <Text style={s.viewAllText}>{t('view_all')}</Text>
+              <MaterialCommunityIcons name="chevron-right" size={16} color={C.secondary} />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={s.viewAll} onPress={() => navigation ? navigation.navigate('Expenses') : setActiveTab?.('expenses')}>
-            <Text style={s.viewAllText}>{t('view_all')}</Text>
-            <MaterialCommunityIcons name="chevron-right" size={18} color={C.secondary} />
-          </TouchableOpacity>
-        </View>
-
-        {catTotals.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 8 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 4 }}>
             {catTotals.map(cat => (
-              <View key={cat.id} style={[s.catCard, { borderBottomColor: C.secondary, borderBottomWidth: 3 }]}>
-                <View style={[s.catIconBg, { backgroundColor: isDarkMode ? 'rgba(130,179,158,0.15)' : 'rgba(65,102,86,0.1)' }]}>
-                  <MaterialCommunityIcons name={cat.icon as any} size={20} color={C.secondary} />
+              <View key={cat.id} style={s.catCard}>
+                <View style={[s.catIconBg, { backgroundColor: cat.color + '18' }]}>
+                  <MaterialCommunityIcons name={cat.icon as any} size={20} color={cat.color} />
                 </View>
-                <Text style={s.catName}>{t('cat_' + cat.id.toLowerCase())}</Text>
-                <Text style={[s.catAmount, { color: C.secondary }]}>₹{cat.amount.toLocaleString('en-IN')}</Text>
+                <Text style={s.catName} numberOfLines={1}>{t('cat_' + cat.id.toLowerCase())}</Text>
+                <Text style={[s.catAmt, { color: cat.color }]}>₹{cat.amount.toLocaleString('en-IN')}</Text>
               </View>
             ))}
           </ScrollView>
-        ) : (
-          <View style={s.empty}>
-            <MaterialCommunityIcons name="cart-plus" size={28} color={C.outline + '88'} />
-            <Text style={s.emptyText}>{t('no_expenses_yet')}</Text>
-          </View>
-        )}
-      </View>
+        </View>
+      )}
 
-      {/* ── Recent Activity ─────────────────────────── */}
+      {/* ── Recent Activity ── */}
       <View style={s.section}>
         <View style={s.sectionHead}>
-          <View>
-            <Text style={s.sectionTitle}>{t('recent_activity')}</Text>
-            <Text style={s.sectionTitleHi}>{t('recent_activity_subtitle')}</Text>
-          </View>
+          <Text style={s.sectionTitle}>{t('recent_activity')}</Text>
         </View>
 
         {expenses.length === 0 ? (
-          <View style={s.welcomeEmpty}>
-            <MaterialCommunityIcons name="wallet-plus-outline" size={40} color={C.secondary + 'aa'} />
-            <Text style={s.welcomeTitle}>{t('no_transactions')}</Text>
-            <Text style={s.welcomeSub}>{t('no_transactions_sub')}</Text>
-            <TouchableOpacity style={s.welcomeBtn} onPress={() => navigation ? navigation.navigate('Expenses') : setActiveTab?.('expenses')} activeOpacity={0.85}>
+          <View style={s.emptyState}>
+            <MaterialCommunityIcons name="wallet-plus-outline" size={40} color={C.outline + '66'} />
+            <Text style={s.emptyTitle}>{t('no_transactions')}</Text>
+            <Text style={s.emptySub}>{t('no_transactions_sub')}</Text>
+            <TouchableOpacity
+              style={s.emptyBtn}
+              onPress={() => setActiveTab?.('expenses')}
+              activeOpacity={0.85}
+            >
               <MaterialCommunityIcons name="plus" size={16} color="#fff" />
-              <Text style={s.welcomeBtnText}>{t('btn_add_first')}</Text>
+              <Text style={s.emptyBtnText}>{t('btn_add_first')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -335,20 +312,26 @@ export default function DashboardScreen({ setActiveTab, navigation }: DashboardS
               const isDebit = item.type === 'debit';
               return (
                 <View key={item.expenseId || item.id} style={s.txRow}>
-                  <View style={[s.txIconBg, { backgroundColor: isDarkMode ? 'rgba(130,179,158,0.15)' : 'rgba(65,102,86,0.1)' }]}>
-                    <MaterialCommunityIcons name={isDebit ? meta.icon as any : 'piggy-bank-outline'} size={18} color={C.secondary} />
+                  <View style={[s.txIconBg, { backgroundColor: meta.color + '18' }]}>
+                    <MaterialCommunityIcons
+                      name={(isDebit ? meta.icon : 'arrow-down-circle-outline') as any}
+                      size={18}
+                      color={meta.color}
+                    />
                   </View>
                   <View style={s.txInfo}>
                     <Text style={s.txTitle} numberOfLines={1}>{item.itemName}</Text>
-                    <Text style={s.txDate}>{formatDate(item.date)}</Text>
+                    <Text style={s.txMeta}>{t('cat_' + item.category.toLowerCase())} · {formatDate(item.date)}</Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={[s.txAmount, { color: C.onSurface }]}>
-                      {isDebit ? '-' : '+'}₹{item.amount.toLocaleString('en-IN')}
+                    <Text style={[s.txAmt, { color: isDebit ? C.error : C.secondary }]}>
+                      {isDebit ? '−' : '+'}₹{item.amount.toLocaleString('en-IN')}
                     </Text>
-                    <Text style={[s.txType, { color: isDebit ? C.error : C.secondary }]}>
-                      {isDebit ? t('tx_debit') : t('tx_credit')}
-                    </Text>
+                    <View style={[s.txTypeBadge, { backgroundColor: isDebit ? C.error + '18' : C.secondary + '18' }]}>
+                      <Text style={[s.txTypeTxt, { color: isDebit ? C.error : C.secondary }]}>
+                        {isDebit ? t('tx_debit') : t('tx_credit')}
+                      </Text>
+                    </View>
                   </View>
                 </View>
               );
@@ -361,171 +344,207 @@ export default function DashboardScreen({ setActiveTab, navigation }: DashboardS
 }
 
 const getStyles = (C: Theme) => {
+  const isDark = C.surface !== '#fbf9fa';
   const glass = Platform.select({
-    web: { boxShadow: `0 8px 32px ${C.glassShadow}`, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' },
-    ios: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', },
+    web:     { boxShadow: `0 4px 24px ${C.glassShadow}`, backdropFilter: 'blur(16px)' },
+    ios:     { boxShadow: '0px 2px 12px rgba(0,0,0,0.08)' },
     android: { elevation: 2 },
   });
 
-  const isDark = C.surface !== '#fbf9fa';
-
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: C.surface },
-    scroll: { flexGrow: 1, padding: 20, paddingTop: 16, paddingBottom: 24, gap: 0 },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
-    profileRow: { flexDirection: 'row', alignItems: 'center', flex: 1, position: 'relative' },
-    avatar: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: C.secondaryContainer },
-    badge: { position: 'absolute', bottom: 0, left: 30, width: 11, height: 11, borderRadius: 6, backgroundColor: C.secondary, borderWidth: 2, borderColor: C.surface },
-    greeting: { fontSize: 15, fontWeight: '700', color: C.primary },
-    greetSub: { fontSize: 11, color: C.outline, opacity: 0.8, marginTop: 1 },
-    headerIcons: { flexDirection: 'row', gap: 6 },
-    iconBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.cardBg, borderWidth: 1, borderColor: C.borderColor, alignItems: 'center', justifyContent: 'center' },
-    
-    // Budget Card
-    budgetCard: { backgroundColor: C.cardBg, borderRadius: 24, borderWidth: 1, borderColor: C.borderColor, padding: 18, marginBottom: 14, position: 'relative', overflow: 'hidden', ...glass },
-    budgetGlow: { position: 'absolute', top: 0, right: 0, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(195,236,215,0.12)', transform: [{ translateX: 40 }, { translateY: -40 }] },
-    budgetTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14 },
-    budgetAmount: { fontSize: 20, fontWeight: '700', color: C.primary },
-    budgetLabel: { fontSize: 11, color: C.outline, marginTop: 2 },
-    spentLabel: { fontSize: 9, fontWeight: '700', color: C.onSurfaceVariant, letterSpacing: 0.5 },
-    spentAmount: { fontSize: 16, fontWeight: '700', color: C.onSurface, marginTop: 2 },
-    spentPct: { fontSize: 12, color: C.outline, fontWeight: '400' },
-    progressBg: { height: 12, backgroundColor: C.surfaceContainer, borderRadius: 6, overflow: 'hidden', marginBottom: 14 },
-    progressFill: { height: '100%', borderRadius: 6 },
-    budgetFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: C.outlineVariant + '22', paddingTop: 12 },
-    statLabel: { fontSize: 9, fontWeight: '700', color: C.outline, letterSpacing: 0.5 },
-    statValue: { fontSize: 14, fontWeight: '700', marginTop: 2 },
-    detailsBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.primary, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 10 },
-    detailsBtnText: { fontSize: 12, fontWeight: '600', color: isDark ? '#000' : '#fff' },
+    root:   { flex: 1, backgroundColor: C.surface },
+    scroll: { flexGrow: 1, padding: 16, paddingTop: 12, paddingBottom: 24, gap: 16 },
 
-    // Gupt Gullak Card
-    gullakCard: {
+    // ── Header
+    header: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: isDark ? 'rgba(251, 191, 36, 0.08)' : 'rgba(251, 191, 36, 0.09)',
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(251, 191, 36, 0.25)' : 'rgba(217, 119, 6, 0.25)',
-      borderRadius: 20,
-      padding: 16,
-      marginBottom: 16,
-      ...glass
+      gap: 10,
+      marginBottom: 4,
     },
-    gullakLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-    gullakIconBg: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
-      backgroundColor: isDark ? 'rgba(251, 191, 36, 0.12)' : 'rgba(217, 119, 6, 0.15)',
-      alignItems: 'center',
-      justifyContent: 'center'
+    avatarWrap: {
+      width: 44, height: 44, borderRadius: 22,
+      position: 'relative',
     },
-    gullakTitle: { fontSize: 14, fontWeight: '700', color: isDark ? '#f59e0b' : '#b45309' },
-    gullakSub: { fontSize: 10, color: C.outline, marginTop: 2 },
-    gullakRight: { alignItems: 'flex-end' },
-    gullakBalance: { fontSize: 18, fontWeight: '800', color: isDark ? '#f59e0b' : '#b45309' },
-    gullakCoinBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 2,
-      backgroundColor: isDark ? '#d97706' : '#d97706',
-      borderRadius: 8,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      marginTop: 4
+    avatarImg: {
+      width: 44, height: 44, borderRadius: 22,
+      borderWidth: 2, borderColor: C.secondaryContainer,
     },
-    gullakBadgeText: { fontSize: 8, fontWeight: '700', color: '#fff' },
-
-    // Reminders Widget styling
-    remindersScroll: { gap: 12, paddingRight: 8, paddingBottom: 6 },
-    reminderChip: {
-      width: 160,
-      backgroundColor: C.cardBg,
-      borderWidth: 1,
-      borderColor: C.borderColor,
-      borderRadius: 16,
-      padding: 12,
-      ...glass
-    },
-    reminderHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6 },
-    reminderTitleText: { fontSize: 12, fontWeight: '700', color: C.primary, flex: 1 },
-    reminderAmount: { fontSize: 16, fontWeight: '800', color: C.primary, marginBottom: 2 },
-    reminderDueDate: { fontSize: 9, color: C.outline, marginBottom: 8 },
-    payBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
+    avatarPlaceholder: {
+      width: 44, height: 44, borderRadius: 22,
       backgroundColor: C.primary,
-      borderRadius: 8,
-      paddingVertical: 6,
-      width: '100%'
+      alignItems: 'center', justifyContent: 'center',
+      borderWidth: 2, borderColor: C.secondaryContainer,
     },
-    payBtnText: { fontSize: 10, fontWeight: '700', color: isDark ? '#000' : '#fff' },
-    remindersEmptyCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      backgroundColor: isDark ? 'rgba(130,179,158,0.06)' : 'rgba(195,236,215,0.1)',
-      borderRadius: 16,
-      borderWidth: 1,
-      borderStyle: 'dashed',
-      borderColor: C.secondary + '44',
-      paddingVertical: 18
+    avatarLetter: { fontSize: 18, fontWeight: '700', color: isDark ? '#000' : '#fff' },
+    onlineDot: {
+      position: 'absolute', bottom: 1, right: 1,
+      width: 10, height: 10, borderRadius: 5,
+      backgroundColor: C.secondary,
+      borderWidth: 2, borderColor: C.surface,
     },
-    remindersEmptyText: { fontSize: 12, fontWeight: '600', color: C.secondary },
+    greetBlock: { flex: 1 },
+    greeting:   { fontSize: 15, fontWeight: '700', color: C.primary },
+    greetSub:   { fontSize: 11, color: C.outline, marginTop: 1 },
+    headerActions: { flexDirection: 'row', gap: 8 },
+    iconBtn: {
+      width: 36, height: 36, borderRadius: 18,
+      backgroundColor: C.surfaceContainer,
+      borderWidth: 1, borderColor: C.borderColor,
+      alignItems: 'center', justifyContent: 'center',
+    },
 
-    // Savings Card
-    savingsCard: { backgroundColor: C.cardBg, borderRadius: 24, borderWidth: 1, borderColor: C.borderColor, borderLeftWidth: 4, borderLeftColor: C.tertiaryContainer, padding: 16, marginBottom: 22, ...glass },
-    savingsTitle: { fontSize: 14, fontWeight: '700', color: C.tertiary },
-    savingsTitleHi: { fontSize: 11, color: C.outline, opacity: 0.7 },
-    savingsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-    savingsName: { fontSize: 13, fontWeight: '500', color: C.onSurface },
-    savingsTarget: { fontSize: 13, fontWeight: '700', color: C.tertiary },
-    savingsBarBg: { height: 8, backgroundColor: 'rgba(181,172,132,0.15)', borderRadius: 4, overflow: 'hidden' },
-    savingsBarFill: { height: '100%', backgroundColor: C.tertiaryContainer, borderRadius: 4 },
-    savingsPct: { fontSize: 10, fontWeight: '700', color: C.tertiary },
-    savingsAchieved: { fontSize: 10, fontWeight: '600', color: C.outline },
-    savingsEditBtn: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(181,172,132,0.12)' },
-    savingsPlaceholder: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(181,172,132,0.06)', borderRadius: 16, padding: 12, marginTop: 8 },
-    savingsPlaceholderTitle: { fontSize: 13, fontWeight: '700', color: C.tertiary },
-    savingsPlaceholderSub: { fontSize: 11, color: C.outline, marginTop: 2 },
-    
-    // Rewards Game Bento Card
-    rewardsCard: { backgroundColor: C.cardBg, borderRadius: 24, borderWidth: 1, borderColor: C.borderColor, borderLeftWidth: 4, borderLeftColor: C.secondary, padding: 16, marginBottom: 22, ...glass },
-    rewardsTitle: { fontSize: 14, fontWeight: '700', color: C.secondary },
-    rewardsPointsText: { fontSize: 13, fontWeight: '600', color: C.onSurface, marginTop: 6 },
-    rewardsBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.secondary, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 14 },
-    rewardsBtnText: { fontSize: 12, fontWeight: '700', color: C.onSecondaryContainer },
-    
-    // Sections
-    section: { marginBottom: 22 },
-    sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 },
-    sectionTitle: { fontSize: 17, fontWeight: '700', color: C.primary },
-    sectionTitleHi: { fontSize: 11, color: C.outline, opacity: 0.7 },
-    viewAll: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-    viewAllText: { fontSize: 13, fontWeight: '600', color: C.secondary },
-    
-    // Category chips
-    catCard: { minWidth: 110, backgroundColor: C.cardBg, borderRadius: 18, borderWidth: 1, borderColor: C.borderColor, padding: 12, ...glass },
-    catIconBg: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-    catName: { fontSize: 12, fontWeight: '600', color: C.onSurface },
-    catAmount: { fontSize: 12, fontWeight: '700', marginTop: 2 },
-    empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 24, gap: 8, backgroundColor: C.cardBg + '55', borderRadius: 16, borderWidth: 1, borderColor: C.borderColor },
-    emptyText: { fontSize: 13, color: C.outline, textAlign: 'center' },
-    
-    // Transaction row
-    txRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.cardBg, borderRadius: 16, borderWidth: 1, borderColor: C.borderColor, padding: 12, gap: 12, ...glass },
-    txIconBg: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-    txInfo: { flex: 1 },
-    txTitle: { fontSize: 13, fontWeight: '700', color: C.onSurface },
-    txDate: { fontSize: 9, color: C.outline, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.4 },
-    txAmount: { fontSize: 13, fontWeight: '700' },
-    txType: { fontSize: 9, fontWeight: '600', marginTop: 2 },
-    welcomeEmpty: { alignItems: 'center', paddingVertical: 32, paddingHorizontal: 16, gap: 10, backgroundColor: isDark ? 'rgba(130,179,158,0.06)' : 'rgba(195,236,215,0.08)', borderRadius: 20, borderWidth: 1, borderStyle: 'dashed', borderColor: C.secondary + '44' },
-    welcomeTitle: { fontSize: 16, fontWeight: '700', color: C.primary, textAlign: 'center' },
-    welcomeSub: { fontSize: 12, color: C.outline, textAlign: 'center', lineHeight: 18 },
-    welcomeBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, backgroundColor: C.secondary, paddingVertical: 10, paddingHorizontal: 20, borderRadius: 12 },
-    welcomeBtnText: { fontSize: 13, fontWeight: '700', color: isDark ? '#000' : '#fff' },
+    // ── Budget Hero Card
+    budgetCard: {
+      backgroundColor: isDark ? '#0f172a' : C.primary,
+      borderRadius: 24,
+      padding: 20,
+      gap: 14,
+      overflow: 'hidden',
+      position: 'relative',
+      ...Platform.select({
+        web:     { boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.6)' : '0 8px 32px rgba(10,20,34,0.3)' },
+        ios:     { boxShadow: '0px 8px 24px rgba(0,0,0,0.2)' },
+        android: { elevation: 6 },
+      }),
+    },
+    glow1: {
+      position: 'absolute', top: -30, right: -30,
+      width: 120, height: 120, borderRadius: 60,
+      backgroundColor: isDark ? 'rgba(130,179,158,0.12)' : 'rgba(255,255,255,0.08)',
+    },
+    glow2: {
+      position: 'absolute', bottom: -20, left: 60,
+      width: 80, height: 80, borderRadius: 40,
+      backgroundColor: isDark ? 'rgba(130,179,158,0.06)' : 'rgba(255,255,255,0.05)',
+    },
+    budgetRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+    budgetLabel: { fontSize: 11, fontWeight: '600', color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.65)', letterSpacing: 0.5, textTransform: 'uppercase' },
+    budgetAmount: { fontSize: 28, fontWeight: '800', color: '#fff', marginTop: 2, letterSpacing: -0.5 },
+    spentBadge: {
+      backgroundColor: 'rgba(255,255,255,0.12)',
+      borderRadius: 12, padding: 10,
+      alignItems: 'center',
+    },
+    spentBadgeLabel: { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.6)', letterSpacing: 0.5 },
+    spentBadgeValue: { fontSize: 18, fontWeight: '800', color: '#fff', marginTop: 2 },
+    progressBg:   { height: 6, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 3, overflow: 'hidden' },
+    progressFill: { height: '100%', borderRadius: 3 },
+    budgetStats:  { flexDirection: 'row', alignItems: 'center' },
+    statPill:     { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
+    statDivider:  { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.12)', marginHorizontal: 4 },
+    statPillLabel:{ fontSize: 9, fontWeight: '600', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.3 },
+    statPillValue:{ fontSize: 13, fontWeight: '700', marginTop: 1 },
+    detailsBtn: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      borderRadius: 12, paddingVertical: 12,
+      borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    },
+    detailsBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+
+    // ── Quick Stats Row
+    quickRow:  { flexDirection: 'row', gap: 10 },
+    quickCard: {
+      flex: 1, borderRadius: 20, padding: 14,
+      backgroundColor: C.cardBg,
+      borderWidth: 1, borderColor: C.borderColor,
+      gap: 4, ...glass,
+    },
+    gullakCard:      { borderColor: 'rgba(217,119,6,0.25)' },
+    savingsQuickCard: {},
+    rewardsQuickCard: {},
+    quickIcon:  { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+    quickLabel: { fontSize: 10, fontWeight: '600', color: C.outline, letterSpacing: 0.3 },
+    quickValue: { fontSize: 14, fontWeight: '800', color: C.primary },
+    quickSub:   { fontSize: 9, color: C.outline, marginTop: 1 },
+    miniBar:     { height: 4, backgroundColor: C.surfaceContainer, borderRadius: 2, overflow: 'hidden', marginVertical: 4 },
+    miniBarFill: { height: '100%', backgroundColor: '#6366f1', borderRadius: 2 },
+
+    // ── Section
+    section:    { gap: 10 },
+    sectionHead:{ flexDirection: 'row', alignItems: 'center', gap: 8 },
+    sectionTitle:{ fontSize: 16, fontWeight: '700', color: C.primary, flex: 1 },
+    sectionBadge:{
+      backgroundColor: C.error, borderRadius: 10,
+      paddingHorizontal: 7, paddingVertical: 2,
+      minWidth: 20, alignItems: 'center',
+    },
+    viewAllBtn:  { flexDirection: 'row', alignItems: 'center', gap: 2 },
+    viewAllText: { fontSize: 12, fontWeight: '600', color: C.secondary },
+
+    // ── Reminders
+    remRow:       { gap: 10, paddingRight: 4 },
+    reminderCard: {
+      width: 152,
+      backgroundColor: C.cardBg,
+      borderRadius: 18, borderWidth: 1,
+      borderColor: C.borderColor,
+      padding: 14, gap: 4, ...glass,
+    },
+    reminderTop:   { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+    reminderIconBg:{ width: 28, height: 28, borderRadius: 14, backgroundColor: C.error + '18', alignItems: 'center', justifyContent: 'center' },
+    reminderTitle: { fontSize: 12, fontWeight: '700', color: C.primary, flex: 1 },
+    reminderAmt:   { fontSize: 17, fontWeight: '800', color: C.primary },
+    reminderDue:   { fontSize: 10, color: C.outline },
+    payBtn: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+      gap: 4, backgroundColor: C.primary,
+      borderRadius: 10, paddingVertical: 8, marginTop: 4,
+    },
+    payBtnText: { fontSize: 11, fontWeight: '700', color: isDark ? '#000' : '#fff' },
+
+    allPaidBanner: {
+      flexDirection: 'row', alignItems: 'center', gap: 8,
+      backgroundColor: isDark ? 'rgba(130,179,158,0.06)' : 'rgba(195,236,215,0.15)',
+      borderRadius: 14, borderWidth: 1, borderColor: C.secondary + '33',
+      paddingVertical: 12, paddingHorizontal: 16,
+    },
+    allPaidText: { fontSize: 13, fontWeight: '600', color: C.secondary },
+
+    // ── Category chips
+    catCard: {
+      width: 100,
+      backgroundColor: C.cardBg,
+      borderRadius: 18, borderWidth: 1,
+      borderColor: C.borderColor,
+      padding: 12, gap: 4, ...glass,
+    },
+    catIconBg: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+    catName:   { fontSize: 11, fontWeight: '600', color: C.onSurfaceVariant },
+    catAmt:    { fontSize: 12, fontWeight: '700' },
+
+    // ── Transaction rows
+    txRow: {
+      flexDirection: 'row', alignItems: 'center', gap: 12,
+      backgroundColor: C.cardBg,
+      borderRadius: 16, borderWidth: 1,
+      borderColor: C.borderColor,
+      padding: 12, ...glass,
+    },
+    txIconBg:   { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+    txInfo:     { flex: 1, gap: 2 },
+    txTitle:    { fontSize: 13, fontWeight: '700', color: C.onSurface },
+    txMeta:     { fontSize: 10, color: C.outline },
+    txAmt:      { fontSize: 14, fontWeight: '800' },
+    txTypeBadge:{ borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginTop: 3 },
+    txTypeTxt:  { fontSize: 9, fontWeight: '700' },
+
+    // ── Empty state
+    emptyState: {
+      alignItems: 'center', paddingVertical: 32, gap: 8,
+      backgroundColor: isDark ? 'rgba(130,179,158,0.04)' : 'rgba(195,236,215,0.08)',
+      borderRadius: 20, borderWidth: 1, borderStyle: 'dashed',
+      borderColor: C.secondary + '44',
+    },
+    emptyTitle:   { fontSize: 15, fontWeight: '700', color: C.primary, textAlign: 'center' },
+    emptySub:     { fontSize: 12, color: C.outline, textAlign: 'center', lineHeight: 18 },
+    emptyBtn: {
+      flexDirection: 'row', alignItems: 'center', gap: 6,
+      backgroundColor: C.secondary,
+      paddingVertical: 10, paddingHorizontal: 20,
+      borderRadius: 12, marginTop: 4,
+    },
+    emptyBtnText: { fontSize: 13, fontWeight: '700', color: isDark ? '#000' : '#fff' },
   });
 };
