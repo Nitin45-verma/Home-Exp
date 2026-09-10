@@ -127,6 +127,7 @@ export interface AppContextType {
   signUp: (phoneNumber: string, password: string) => Promise<boolean>;
   sendEmailOtp: (email: string) => Promise<{ success: boolean; message: string }>;
   verifyEmailOtp: (email: string, otp: string) => Promise<{ success: boolean; message: string }>;
+  loginWithGoogle: (idToken: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   completeOnboarding: (data: { name: string; budgetLimit: string; language: string; currency?: string }) => Promise<void>;
   updateProfile: (data: { name: string; budgetLimit: string; language: string; savingsName?: string; savingsTarget?: string; savingsAchieved?: string }) => Promise<void>;
@@ -336,6 +337,38 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   }, [fetchMonthlyData, fetchGullakBalance, fetchReminders, handleNetworkError]);
+
+  const loginWithGoogle = useCallback(async (idToken: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      setLoading(true);
+      const res = await api.post('/api/auth/google', { idToken });
+      
+      if (res.data.success) {
+        const { token, user: loggedUser, isFirstTimeUser: onboardFlag } = res.data;
+        storage.set('hb_token', token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        setUser(loggedUser);
+        setIsLoggedIn(true);
+        setIsFirstTimeUser(onboardFlag);
+
+        await Promise.all([
+          fetchMonthlyData(),
+          fetchGullakBalance(),
+          fetchReminders()
+        ]);
+        
+        setLoading(false);
+        return { success: true };
+      }
+      setLoading(false);
+      return { success: false, message: 'Google Sign-in failed' };
+    } catch (error: any) {
+      setLoading(false);
+      const errorMsg = error.response?.data?.message || error.message || 'Google Sign-in failed';
+      return { success: false, message: errorMsg };
+    }
+  }, [fetchMonthlyData, fetchGullakBalance, fetchReminders]);
 
   const signUp = useCallback(async (phoneNumber: string, password: string): Promise<boolean> => {
     try {
@@ -585,6 +618,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         signUp,
         sendEmailOtp,
         verifyEmailOtp,
+        loginWithGoogle,
         logout,
         completeOnboarding,
         updateProfile,

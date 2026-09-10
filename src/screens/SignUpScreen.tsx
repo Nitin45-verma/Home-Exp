@@ -15,7 +15,7 @@ export default function SignUpScreen({ setAuthScreen, navigation }: SignUpScreen
   const context = useContext(AppContext);
   if (!context) return null;
 
-  const { signUp, sendEmailOtp, verifyEmailOtp, t, C } = context;
+  const { signUp, sendEmailOtp, verifyEmailOtp, loginWithGoogle, t, C } = context;
   const isDark = C.surface !== '#fbf9fa';
   
   const [phone, setPhone] = useState('');
@@ -47,6 +47,42 @@ export default function SignUpScreen({ setAuthScreen, navigation }: SignUpScreen
     }
     return () => clearInterval(interval);
   }, [timer]);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        if ((window as any).google) {
+          (window as any).google.accounts.id.initialize({
+            client_id: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '102148769352-u496nd04n6d04n6d.apps.googleusercontent.com', // Replace with real Client ID from env
+            callback: async (response: any) => {
+              const res = await loginWithGoogle(response.credential);
+              if (!res.success) {
+                setOtpMsg({ text: res.message || 'Google signup failed', isError: true });
+              }
+            }
+          });
+          const btnContainer = document.getElementById('google-btn-container-signup');
+          if (btnContainer) {
+            (window as any).google.accounts.id.renderButton(
+              btnContainer,
+              { theme: isDark ? 'filled_black' : 'outline', size: 'large', width: '100%' }
+            );
+          }
+        }
+      };
+      document.head.appendChild(script);
+      
+      return () => {
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
+      };
+    }
+  }, [loginWithGoogle, isDark]);
 
   const validate = () => {
     const e: typeof errors = {};
@@ -269,6 +305,25 @@ export default function SignUpScreen({ setAuthScreen, navigation }: SignUpScreen
               ? <ActivityIndicator color={isDark ? '#000' : '#fff'} />
               : <><Text style={s.primaryBtnText}>{t('btn_register')}</Text><Text style={s.primaryBtnSub}>{t('btn_register_sub')}</Text></>}
           </TouchableOpacity>
+        </View>
+
+        {/* Divider */}
+        <View style={s.divider}>
+          <View style={s.divLine} />
+          <Text style={s.divText}>{t('or_divider')}</Text>
+          <View style={s.divLine} />
+        </View>
+
+        {/* Quick Sign Up */}
+        <View style={s.socialRow}>
+          {Platform.OS === 'web' ? (
+            <View nativeID="google-btn-container-signup" style={{ width: '100%', alignItems: 'center' }} />
+          ) : (
+            <TouchableOpacity style={s.socialBtn} onPress={() => {}} disabled={isLoading}>
+              <MaterialCommunityIcons name="google" size={22} color={C.primary} />
+              <Text style={s.socialText}>{t('continue_google')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Footer link to Switch to Login */}

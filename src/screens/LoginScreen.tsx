@@ -15,7 +15,7 @@ export default function LoginScreen({ setAuthScreen, navigation }: LoginScreenPr
   const context = useContext(AppContext);
   if (!context) return null;
 
-  const { login, sendEmailOtp, verifyEmailOtp, t, C } = context;
+  const { login, sendEmailOtp, verifyEmailOtp, loginWithGoogle, t, C } = context;
   const isDark = C.surface !== '#fbf9fa';
 
   const [phone, setPhone] = useState('');
@@ -44,6 +44,42 @@ export default function LoginScreen({ setAuthScreen, navigation }: LoginScreenPr
     }
     return () => clearInterval(interval);
   }, [timer]);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        if ((window as any).google) {
+          (window as any).google.accounts.id.initialize({
+            client_id: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '102148769352-u496nd04n6d04n6d.apps.googleusercontent.com', // Replace with real Client ID from env
+            callback: async (response: any) => {
+              const res = await loginWithGoogle(response.credential);
+              if (!res.success) {
+                setOtpMsg({ text: res.message || 'Google login failed', isError: true });
+              }
+            }
+          });
+          const btnContainer = document.getElementById('google-btn-container');
+          if (btnContainer) {
+            (window as any).google.accounts.id.renderButton(
+              btnContainer,
+              { theme: isDark ? 'filled_black' : 'outline', size: 'large', width: '100%' }
+            );
+          }
+        }
+      };
+      document.head.appendChild(script);
+      
+      return () => {
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
+      };
+    }
+  }, [loginWithGoogle, isDark]);
 
   const validate = () => {
     const e: typeof errors = {};
@@ -263,10 +299,14 @@ export default function LoginScreen({ setAuthScreen, navigation }: LoginScreenPr
 
         {/* Quick Login */}
         <View style={s.socialRow}>
-          <TouchableOpacity style={s.socialBtn} onPress={handleGoogle} disabled={isLoading}>
-            <MaterialCommunityIcons name="google" size={22} color={C.primary} />
-            <Text style={s.socialText}>{t('continue_google')}</Text>
-          </TouchableOpacity>
+          {Platform.OS === 'web' ? (
+            <View nativeID="google-btn-container" style={{ width: '100%', alignItems: 'center' }} />
+          ) : (
+            <TouchableOpacity style={s.socialBtn} onPress={() => {}} disabled={isLoading}>
+              <MaterialCommunityIcons name="google" size={22} color={C.primary} />
+              <Text style={s.socialText}>{t('continue_google')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Footer Link to Switch to Sign Up */}
