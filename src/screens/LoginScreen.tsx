@@ -150,6 +150,9 @@ export default function LoginScreen({ setAuthScreen, navigation }: LoginScreenPr
   const handleGoogle = async () => {
     setIsLoading(true);
     await login('9876543210', 'password');
+    setIsLoading(false);
+  };
+
   const s = getStyles(C);
 
   return (
