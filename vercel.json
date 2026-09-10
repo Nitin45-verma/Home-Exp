@@ -1,12 +1,17 @@
 {
+  "buildCommand": "npx expo export -p web",
+  "outputDirectory": "dist",
+  "devCommand": "npx expo start --web",
+  "cleanUrls": true,
+  "framework": null,
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "http://51.20.116.238:4000/api/:path*"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/:path*",
+      "destination": "/"
     }
   ]
 }
