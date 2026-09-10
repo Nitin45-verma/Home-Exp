@@ -180,22 +180,6 @@ export default function SignUpScreen({ setAuthScreen, navigation }: SignUpScreen
       setOtpMsg({ text: res.message, isError: true });
     }
   };
-    if (validate()) {
-      setIsLoading(true);
-      try {
-        await signUp(phone.trim(), password);
-      } catch (err: any) {
-        const isTimeout = err.code === 'ECONNABORTED' || err.message === 'Network Error';
-        Alert.alert(
-          isTimeout ? 'Network Error' : 'Registration Failed',
-          isTimeout ? 'Cannot reach server. Please check AWS security groups or server status.' : (err.response?.data?.message || err.message)
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
   const s = getStyles(C);
 
   return (
@@ -445,6 +429,12 @@ const getStyles = (C: Theme) => {
     primaryBtn: { backgroundColor: C.primary, borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 6, ...Platform.select({ web: { boxShadow: '0px 4px 8px rgba(0,0,0,0.18)' }, ios: { boxShadow: '0px 4px 12px rgba(0,0,0,0.1)', }, default: { elevation: 4 } }) },
     primaryBtnText: { fontSize: 15, fontWeight: '700', color: isDark ? '#000' : '#fff' },
     primaryBtnSub: { fontSize: 10, color: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)', marginTop: 2 },
+    divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10 },
+    divLine: { flex: 1, height: 1, backgroundColor: C.outlineVariant + '44' },
+    divText: { fontSize: 10, fontWeight: '600', color: C.outline + '99', letterSpacing: 1 },
+    socialRow: { alignItems: 'center', gap: 10 },
+    socialBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 13, paddingHorizontal: 22, borderRadius: 14, borderWidth: 1, borderColor: C.outlineVariant + '88', backgroundColor: 'rgba(255,255,255,0.85)', width: '100%', justifyContent: 'center', ...Platform.select({ web: { boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.4)' : '0 2px 8px rgba(10,20,34,0.05)' } }) },
+    socialText: { fontSize: 14, fontWeight: '600', color: C.primary },
     footer: { alignItems: 'center', marginTop: 24, paddingBottom: 8 },
     footerText: { fontSize: 13, color: C.onSurfaceVariant },
     footerLink: { fontWeight: '700', color: C.primary },
