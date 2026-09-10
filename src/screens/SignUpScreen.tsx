@@ -15,21 +15,23 @@ export default function SignUpScreen({ setAuthScreen, navigation }: SignUpScreen
   const context = useContext(AppContext);
   if (!context) return null;
 
-  const { signUp, sendEmailOtp, verifyEmailOtp, loginWithGoogle, t, C } = context;
+  const { signUp, registerRequest, verifyRegisterOtp, sendEmailOtp, verifyEmailOtp, loginWithGoogle, t, C } = context;
   const isDark = C.surface !== '#fbf9fa';
   
+  // Phase 1 (Input Form) States
+  const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ phone?: string | null; password?: string | null; otp?: string | null }>({});
+  const [errors, setErrors] = useState<{ name?: string | null; phone?: string | null; password?: string | null; otp?: string | null }>({});
 
-  // OTP Email Verification States
+  // Phase 2 (OTP Verification) States
+  const [isOtpPhase, setIsOtpPhase] = useState(false);
   const [otp, setOtp] = useState('');
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
   const [otpMsg, setOtpMsg] = useState<{ text: string; isError: boolean } | null>(null);
   const [timer, setTimer] = useState(0);
 
@@ -87,7 +89,12 @@ export default function SignUpScreen({ setAuthScreen, navigation }: SignUpScreen
   const validate = () => {
     const e: typeof errors = {};
     const cleanPhone = phone.trim();
+    const cleanName = name.trim();
     
+    if (!cleanName) {
+      e.name = t('name_req', undefined) || 'Name is required';
+    }
+
     if (isEmail) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanPhone)) {
         e.phone = t('invalid_email');
@@ -106,28 +113,42 @@ export default function SignUpScreen({ setAuthScreen, navigation }: SignUpScreen
     return !Object.keys(e).length;
   };
 
-  const handleSendOtp = async () => {
+  const handleRegisterRequest = async () => {
+    if (!validate()) return;
+    
     const cleanEmail = phone.trim();
-    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setErrors(prev => ({ ...prev, phone: t('invalid_email') }));
+    const cleanName = name.trim();
+    
+    if (!isEmail) {
+      // Original logic for phone-based register if supported, but instructions imply email focus. 
+      // We will fallback to existing signUp for non-email for safety if needed, 
+      // but assuming email for the new OTP flow.
+      setIsLoading(true);
+      try {
+        await signUp(cleanEmail, password);
+      } catch (err: any) {
+        setErrors(prev => ({ ...prev, phone: err.response?.data?.message || 'Registration failed' }));
+      }
+      setIsLoading(false);
       return;
     }
 
-    setIsSendingOtp(true);
+    setIsLoading(true);
     setOtpMsg(null);
-    const res = await sendEmailOtp(cleanEmail);
-    setIsSendingOtp(false);
+    const res = await registerRequest(cleanName, cleanEmail, password);
+    setIsLoading(false);
 
     if (res.success) {
+      setIsOtpPhase(true);
       setOtpSent(true);
       setTimer(60);
       setOtpMsg({ text: res.message, isError: false });
     } else {
-      setOtpMsg({ text: res.message, isError: true });
+      setErrors(prev => ({ ...prev, phone: res.message }));
     }
   };
 
-  const handleVerifyOtp = async () => {
+  const handleVerifyRegisterOtp = async () => {
     if (!otp.trim() || otp.trim().length !== 6) {
       setErrors(prev => ({ ...prev, otp: t('otp_req') }));
       return;
@@ -135,18 +156,30 @@ export default function SignUpScreen({ setAuthScreen, navigation }: SignUpScreen
 
     setIsVerifyingOtp(true);
     setOtpMsg(null);
-    const res = await verifyEmailOtp(phone.trim(), otp.trim());
+    const res = await verifyRegisterOtp(phone.trim(), otp.trim());
     setIsVerifyingOtp(false);
 
     if (res.success) {
-      setOtpVerified(true);
       setOtpMsg({ text: res.message, isError: false });
+      // AppContext auto-updates state, Navigation happens via App.tsx listening to isLoggedIn
     } else {
       setOtpMsg({ text: res.message, isError: true });
     }
   };
 
-  const handleRegister = async () => {
+  const handleResendOtp = async () => {
+    setIsSendingOtp(true);
+    setOtpMsg(null);
+    const res = await registerRequest(name.trim(), phone.trim(), password);
+    setIsSendingOtp(false);
+
+    if (res.success) {
+      setTimer(60);
+      setOtpMsg({ text: res.message, isError: false });
+    } else {
+      setOtpMsg({ text: res.message, isError: true });
+    }
+  };
     if (validate()) {
       setIsLoading(true);
       try {
@@ -186,55 +219,90 @@ export default function SignUpScreen({ setAuthScreen, navigation }: SignUpScreen
           <Text style={s.cardTitle}>{t('signup_welcome')}</Text>
           <Text style={s.cardSub}>{t('signup_welcome_sub')}</Text>
 
-          {/* Email or Phone */}
-          <View style={s.field}>
-            <View style={s.labelRow}>
-              <Text style={s.label}>{t('phone_label')}</Text>
-              {otpVerified && (
-                <View style={s.verifiedBadge}>
-                  <MaterialCommunityIcons name="check-decagram" size={14} color="#16a34a" />
-                  <Text style={s.verifiedText}>{t('email_verified_badge')}</Text>
+          {!isOtpPhase ? (
+            <>
+              {/* Name Field */}
+              <View style={s.field}>
+                <Text style={s.label}>{t('name_label', undefined) || 'Full Name'}</Text>
+                <View style={[s.inputRow, errors.name ? s.inputError : null]}>
+                  <TextInput
+                    style={s.input}
+                    placeholder={'John Doe'}
+                    placeholderTextColor={C.outline + '99'}
+                    autoCapitalize="words"
+                    value={name}
+                    onChangeText={tVal => {
+                      setName(tVal);
+                      setErrors(e => ({ ...e, name: null }));
+                    }}
+                  />
+                </View>
+                {errors.name ? <Text style={s.err}>{errors.name}</Text> : null}
+              </View>
+
+              {/* Email or Phone */}
+              <View style={s.field}>
+                <Text style={s.label}>{t('phone_label')}</Text>
+                <View style={[s.inputRow, errors.phone ? s.inputError : null]}>
+                  {(!phone.includes('@') && /^\d*$/.test(phone)) ? <Text style={s.prefix}>+91</Text> : null}
+                  <TextInput
+                    style={s.input}
+                    placeholder={t('phone_placeholder')}
+                    placeholderTextColor={C.outline + '99'}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    value={phone}
+                    onChangeText={tVal => {
+                      setPhone(tVal);
+                      setErrors(e => ({ ...e, phone: null }));
+                    }}
+                  />
+                </View>
+                {errors.phone ? <Text style={s.err}>{errors.phone}</Text> : null}
+              </View>
+
+              {/* Password */}
+              <View style={s.field}>
+                <Text style={s.label}>{t('pin_label')}</Text>
+                <View style={[s.inputRow, errors.password ? s.inputError : null]}>
+                  <TextInput
+                    style={[s.input, { flex: 1, letterSpacing: showPassword ? 2 : 6 }]}
+                    placeholder="• • • • • •"
+                    placeholderTextColor={C.outline + '99'}
+                    secureTextEntry={!showPassword}
+                    value={password}
+                    onChangeText={tVal => { setPassword(tVal); setErrors(e => ({ ...e, password: null })); }}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={s.eyeBtn}>
+                    <MaterialCommunityIcons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={C.outline} />
+                  </TouchableOpacity>
+                </View>
+                {errors.password ? <Text style={s.err}>{errors.password}</Text> : null}
+              </View>
+
+              {/* Status/Feedback message */}
+              {otpMsg && (
+                <View style={[s.msgBanner, otpMsg.isError ? s.msgBannerErr : s.msgBannerSuccess]}>
+                  <MaterialCommunityIcons
+                    name={otpMsg.isError ? "alert-circle-outline" : "check-circle-outline"}
+                    size={16}
+                    color={otpMsg.isError ? C.error : "#16a34a"}
+                  />
+                  <Text style={[s.msgText, { color: otpMsg.isError ? C.error : "#16a34a" }]}>
+                    {otpMsg.text}
+                  </Text>
                 </View>
               )}
-            </View>
-            <View style={[s.inputRow, errors.phone ? s.inputError : null]}>
-              {(!phone.includes('@') && /^\d*$/.test(phone)) ? <Text style={s.prefix}>+91</Text> : null}
-              <TextInput
-                style={s.input}
-                placeholder={t('phone_placeholder')}
-                placeholderTextColor={C.outline + '99'}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={phone}
-                onChangeText={tVal => {
-                  setPhone(tVal);
-                  setErrors(e => ({ ...e, phone: null }));
-                  if (otpSent && tVal !== phone) {
-                    setOtpSent(false);
-                    setOtpVerified(false);
-                  }
-                }}
-              />
-              {isEmail && !otpVerified && (
-                <TouchableOpacity
-                  style={[s.sendOtpInlineBtn, isSendingOtp ? { opacity: 0.6 } : null]}
-                  onPress={handleSendOtp}
-                  disabled={isSendingOtp}>
-                  {isSendingOtp ? (
-                    <ActivityIndicator size="small" color={C.primary} />
-                  ) : (
-                    <Text style={s.sendOtpInlineText} numberOfLines={1} adjustsFontSizeToFit>
-                      {otpSent ? (timer > 0 ? `${timer}s` : t('resend_otp')) : t('send_otp')}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
-            {errors.phone ? <Text style={s.err}>{errors.phone}</Text> : null}
-          </View>
 
-          {/* OTP Section (Visible when OTP is sent for email) */}
-          {isEmail && otpSent && !otpVerified && (
+              {/* Register Button */}
+              <TouchableOpacity style={s.primaryBtn} onPress={handleRegisterRequest} disabled={isLoading} activeOpacity={0.85}>
+                {isLoading
+                  ? <ActivityIndicator color={isDark ? '#000' : '#fff'} />
+                  : <><Text style={s.primaryBtnText}>{t('btn_register')}</Text><Text style={s.primaryBtnSub}>{t('btn_register_sub')}</Text></>}
+              </TouchableOpacity>
+            </>
+          ) : (
+            /* OTP Verification Phase 2 */
             <View style={s.otpCardBox}>
               <Text style={s.label}>{t('otp_label')}</Text>
               <View style={[s.inputRow, errors.otp ? s.inputError : null, { marginTop: 4 }]}>
@@ -251,60 +319,54 @@ export default function SignUpScreen({ setAuthScreen, navigation }: SignUpScreen
                     setErrors(e => ({ ...e, otp: null }));
                   }}
                 />
+              </View>
+              {errors.otp ? <Text style={s.err}>{errors.otp}</Text> : null}
+
+              {/* Status/Feedback message */}
+              {otpMsg && (
+                <View style={[s.msgBanner, otpMsg.isError ? s.msgBannerErr : s.msgBannerSuccess, { marginTop: 12 }]}>
+                  <MaterialCommunityIcons
+                    name={otpMsg.isError ? "alert-circle-outline" : "check-circle-outline"}
+                    size={16}
+                    color={otpMsg.isError ? C.error : "#16a34a"}
+                  />
+                  <Text style={[s.msgText, { color: otpMsg.isError ? C.error : "#16a34a" }]}>
+                    {otpMsg.text}
+                  </Text>
+                </View>
+              )}
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, gap: 12 }}>
                 <TouchableOpacity
-                  style={s.verifyOtpBtn}
-                  onPress={handleVerifyOtp}
+                  style={[s.sendOtpInlineBtn, { flex: 1, height: 48, justifyContent: 'center' }, isSendingOtp ? { opacity: 0.6 } : null]}
+                  onPress={handleResendOtp}
+                  disabled={isSendingOtp || timer > 0}>
+                  {isSendingOtp ? (
+                    <ActivityIndicator size="small" color={C.primary} />
+                  ) : (
+                    <Text style={[s.sendOtpInlineText, { textAlign: 'center' }]} numberOfLines={1}>
+                      {timer > 0 ? `${timer}s` : t('resend_otp')}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[s.verifyOtpBtn, { flex: 2, height: 48, borderRadius: 12, justifyContent: 'center' }]}
+                  onPress={handleVerifyRegisterOtp}
                   disabled={isVerifyingOtp}>
                   {isVerifyingOtp ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
-                    <Text style={s.verifyOtpBtnText}>{t('verify_otp_btn')}</Text>
+                    <Text style={[s.verifyOtpBtnText, { textAlign: 'center' }]}>Verify & Complete</Text>
                   )}
                 </TouchableOpacity>
               </View>
-              {errors.otp ? <Text style={s.err}>{errors.otp}</Text> : null}
-            </View>
-          )}
 
-          {/* Status/Feedback message */}
-          {otpMsg && (
-            <View style={[s.msgBanner, otpMsg.isError ? s.msgBannerErr : s.msgBannerSuccess]}>
-              <MaterialCommunityIcons
-                name={otpMsg.isError ? "alert-circle-outline" : "check-circle-outline"}
-                size={16}
-                color={otpMsg.isError ? C.error : "#16a34a"}
-              />
-              <Text style={[s.msgText, { color: otpMsg.isError ? C.error : "#16a34a" }]}>
-                {otpMsg.text}
-              </Text>
-            </View>
-          )}
-
-          {/* Password */}
-          <View style={s.field}>
-            <Text style={s.label}>{t('pin_label')}</Text>
-            <View style={[s.inputRow, errors.password ? s.inputError : null]}>
-              <TextInput
-                style={[s.input, { flex: 1, letterSpacing: showPassword ? 2 : 6 }]}
-                placeholder="• • • • • •"
-                placeholderTextColor={C.outline + '99'}
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={tVal => { setPassword(tVal); setErrors(e => ({ ...e, password: null })); }}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={s.eyeBtn}>
-                <MaterialCommunityIcons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={C.outline} />
+              <TouchableOpacity onPress={() => setIsOtpPhase(false)} style={{ marginTop: 20, alignItems: 'center' }}>
+                <Text style={s.footerText}>Back to Registration</Text>
               </TouchableOpacity>
             </View>
-            {errors.password ? <Text style={s.err}>{errors.password}</Text> : null}
-          </View>
-
-          {/* Register Button */}
-          <TouchableOpacity style={s.primaryBtn} onPress={handleRegister} disabled={isLoading} activeOpacity={0.85}>
-            {isLoading
-              ? <ActivityIndicator color={isDark ? '#000' : '#fff'} />
-              : <><Text style={s.primaryBtnText}>{t('btn_register')}</Text><Text style={s.primaryBtnSub}>{t('btn_register_sub')}</Text></>}
-          </TouchableOpacity>
+          )}
         </View>
 
         {/* Divider */}

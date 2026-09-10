@@ -125,6 +125,8 @@ export interface AppContextType {
   loading: boolean;
   login: (phoneNumber: string, password: string) => Promise<boolean>;
   signUp: (phoneNumber: string, password: string) => Promise<boolean>;
+  registerRequest: (name: string, email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  verifyRegisterOtp: (email: string, otp: string) => Promise<{ success: boolean; message: string }>;
   sendEmailOtp: (email: string) => Promise<{ success: boolean; message: string }>;
   verifyEmailOtp: (email: string, otp: string) => Promise<{ success: boolean; message: string }>;
   loginWithGoogle: (idToken: string) => Promise<{ success: boolean; message?: string }>;
@@ -407,6 +409,52 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [fetchMonthlyData, fetchGullakBalance, fetchReminders]);
 
+  const registerRequest = useCallback(async (name: string, email: string, password: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      setLoading(true);
+      const res = await api.post('/api/auth/register-request', { name, email, password });
+      setLoading(false);
+      if (res.data.success) {
+        return { success: true, message: res.data.message || 'OTP sent successfully' };
+      }
+      return { success: false, message: res.data.message || 'Failed to send OTP' };
+    } catch (error: any) {
+      setLoading(false);
+      const msg = error.response?.data?.message || error.message || 'Failed to request registration';
+      return { success: false, message: msg };
+    }
+  }, []);
+
+  const verifyRegisterOtp = useCallback(async (email: string, otp: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      setLoading(true);
+      const res = await api.post('/api/auth/verify-register-otp', { email, otp });
+      if (res.data.success) {
+        const { token, user: loggedUser, isFirstTimeUser: onboardFlag } = res.data;
+        if (token) {
+          storage.set('hb_token', token);
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          setUser(loggedUser);
+          setIsLoggedIn(true);
+          setIsFirstTimeUser(onboardFlag);
+          await Promise.all([
+            fetchMonthlyData(),
+            fetchGullakBalance(),
+            fetchReminders()
+          ]);
+        }
+        setLoading(false);
+        return { success: true, message: res.data.message || 'Email verified successfully!' };
+      }
+      setLoading(false);
+      return { success: false, message: res.data.message || 'Verification failed' };
+    } catch (error: any) {
+      setLoading(false);
+      const msg = error.response?.data?.message || error.message || 'Verification failed';
+      return { success: false, message: msg };
+    }
+  }, [fetchMonthlyData, fetchGullakBalance, fetchReminders]);
+
   const sendEmailOtp = useCallback(async (email: string): Promise<{ success: boolean; message: string }> => {
     try {
       const res = await api.post('/api/auth/send-otp', { email });
@@ -616,6 +664,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         loading,
         login,
         signUp,
+        registerRequest,
+        verifyRegisterOtp,
         sendEmailOtp,
         verifyEmailOtp,
         loginWithGoogle,
